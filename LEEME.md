@@ -1,41 +1,37 @@
-# TaskFlow — Sesión 1
+# TaskFlow — Sesión 4
 
-Esta carpeta es la app **TaskFlow** al terminar la sesión 1. El código de la pantalla está en `lib/main.dart`. La carpeta `android/` es el proyecto Android que crea `flutter create`.
+Al tocar una tarjeta se abre el detalle de esa tarea y se puede volver al listado. El listado no se pierde. El código sigue en `lib/main.dart`. El paquete nuevo es `go_router`, agregado con `flutter pub add go_router` (la versión la elige Flutter).
 
-## Qué ves en la pantalla
+## Rutas
 
-La pantalla no cambia al tocarla. Muestra:
+- `/` muestra el listado.
+- `/task/1`, `/task/2`, etc. muestran el detalle. El número es el id de la tarea.
 
-- el nombre de la app, TaskFlow
-- tu nombre (ahora dice `Escribe tu nombre`)
-- el mensaje de bienvenida al curso
-- la variable `motivationalMessage`, debajo del saludo
-- el contador fijo `Tareas pendientes: 3`
-- el ícono `Icons.task_alt`
-- una paleta propia, el verde `0xFF1F6F5B` (el ejemplo guiado usaba índigo)
+La tarjeta solo pide abrir esa ruta. No decide los datos: el detalle busca la tarea con ese id en `demoTasks`.
 
-`WelcomeScreen` es un `StatelessWidget` porque esos datos no cambian.
+## Qué muestra el detalle
 
-## Qué debes cambiar tú
+- título
+- descripción completa
+- prioridad, en un chip
+- estado: `completada` o `pendiente`
+- una acción visual contextual: el ícono y la frase cambian si la tarea está completada o pendiente
+- el botón **Volver al listado**
 
-1. Abre `lib/main.dart`.
-2. Busca `Escribe tu nombre` y escribe tu nombre.
-3. Si cambias el nombre, actualiza el mismo texto en `test/widget_test.dart`.
-4. Si quieres, cambia la frase de `motivationalMessage` y el color `0xFF1F6F5B`.
+También puedes volver con la flecha de la barra o con el botón atrás del teléfono.
 
-## Cómo ejecutarla
+## Qué probar
 
-En la carpeta donde está `pubspec.yaml`:
+1. Abre tres tarjetas distintas. Cada detalle debe mostrar sus propios datos.
+2. Vuelve con **Volver al listado**.
+3. Entra a otra y vuelve con el atrás del sistema.
+4. Fíjate que la ruta cambia de id (`/task/1`, `/task/3`, `/task/5`).
 
-```bash
-flutter pub get
-flutter devices
-flutter run
-```
+Toma tú dos capturas o un video corto: listado, detalle y regreso.
 
-Si no aparece un dispositivo, abre el emulador de Android Studio o conecta un teléfono y vuelve a ejecutar `flutter devices`.
+Las cadenas del codelab usan `+`. Aquí se escriben con interpolación para que `flutter analyze` no marque avisos. El texto de la pantalla es el mismo.
 
-## Cómo comprobar el código
+## Comprobar
 
 ```bash
 dart format lib
@@ -43,22 +39,17 @@ flutter analyze
 flutter test
 ```
 
-`flutter analyze` debe terminar sin problemas.
-
-## Captura
-
-Toma la captura en tu emulador o teléfono, con tu nombre visible. Este proyecto no trae capturas de entrega.
-
 ## Commit de esta sesión
 
-El aula cerró la sesión 1 el jueves 29 de octubre de 2026 a las 23:59 (UTC-5). Una entrega fuera de plazo puede no ser aceptada.
-
-En tu propio repositorio, cuando la pantalla ya sea la tuya:
+Las sesiones 2, 3 y 4 cierran el domingo 8 de noviembre de 2026 a las 23:59 (UTC-5). Si se pasa esa hora, la entrega puede no ser aceptada.
 
 ```bash
-git add .
-git commit -m "feat: crear pantalla de bienvenida"
+git status
+git add lib/main.dart pubspec.yaml pubspec.lock
+git commit -m "feat: agregar navegación de tareas"
 git push origin main
 ```
 
 El mensaje del commit debe ir exactamente así.
+
+En la página del proyecto integrador aparece otro mensaje, `feat: agregar detalle de tarea`. El codelab de la sesión 4 pide `feat: agregar navegación de tareas`. Usa este último: es el de la evidencia del laboratorio.
