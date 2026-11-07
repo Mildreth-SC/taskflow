@@ -22,16 +22,46 @@ class TaskFlowApp extends StatelessWidget {
   }
 }
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
   @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  // Reemplaza este texto por tu nombre antes de entregar.
+  final String studentName = 'Mildreth Guanoluisa';
+  int pendingTasks = 3;
+  static const dailyGoal = 5;
+  int completedTasks = 0;
+
+  void _addTask() {
+    setState(() {
+      pendingTasks++;
+    });
+  }
+
+  void _completeTask() {
+    if (pendingTasks == 0) {
+      return;
+    }
+
+    setState(() {
+      pendingTasks--;
+      if (completedTasks < dailyGoal) {
+        completedTasks++;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Reemplaza este texto por tu nombre antes de entregar.
-    const studentName = 'Mildreth Guanoluisa';
-    const pendingTasks = 3;
     const courseName = 'Desarrollo de aplicaciones móviles';
     const motivationalMessage = 'Cada tarea terminada te acerca a tu meta.';
+    final statusMessage = pendingTasks == 0
+        ? '¡Excelente! No tienes tareas pendientes.'
+        : 'Aún tienes tareas por organizar.';
 
     return Scaffold(
       appBar: AppBar(title: const Text('TaskFlow'), centerTitle: true),
@@ -50,7 +80,11 @@ class WelcomeScreen extends StatelessWidget {
             const Text(motivationalMessage),
             const SizedBox(height: 12),
             const Text('Bienvenido/a a $courseName.'),
-            const SizedBox(height: 32),
+            const SizedBox(height: 12),
+            Text(statusMessage),
+            const SizedBox(height: 8),
+            Text('Completadas hoy: $completedTasks de $dailyGoal'),
+            const SizedBox(height: 28),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -62,6 +96,23 @@ class WelcomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _addTask,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Agregar tarea'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: pendingTasks == 0 ? null : _completeTask,
+                  icon: const Icon(Icons.done),
+                  label: const Text('Completar una tarea'),
+                ),
+              ],
             ),
           ],
         ),

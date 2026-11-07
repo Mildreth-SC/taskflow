@@ -1,34 +1,54 @@
-# Evidencias — Sesión 1
+# Evidencias de la sesión 2
 
-Captura real del emulador. No es el teléfono físico de Mildreth Guanoluisa y no sustituye una foto que el aula pida desde ese teléfono.
+Capturas y un video reales de TaskFlow en un emulador Android remoto. No son fotos de un teléfono físico ni dibujos de la pantalla.
 
-## Entorno
+**Estudiante:** Mildreth Guanoluisa
 
-Tomada el 7 de noviembre de 2026 en un entorno remoto de prueba.
+## Entorno de la captura
 
-- Flutter 3.47.9 y Dart 3.13.7 (el `pubspec.yaml` de este repo pide SDK `^3.13.7`)
-- Android Emulator, imagen `system-images;android-35;google_apis;x86_64` (Android 15, API 35)
-- AVD `taskflow_api35`, 1080×2400, dispositivo `emulator-5554`
-- Paquete `com.example.taskflow`, actividad `.MainActivity`
-- Captura con `adb exec-out screencap -p` sobre el APK de depuración de este código
-- Video H.264 de 10,9 s (1080×2400, 24 fps) de esa misma pantalla en el emulador, no en un teléfono
+Datos registrados con el paquete de evidencias del 7 de noviembre de 2026:
 
-## Código de origen
+- Flutter 3.47.9 (Dart 3.13.7). Ese Dart cumple el límite `sdk: ^3.13.7` de `pubspec.yaml`.
+- Android 15, API 35. Imagen `system-images;android-35;google_apis;x86_64`.
+- AVD `taskflow_api35`, 1080×2400, 420 dpi, 2048 MB de RAM.
+- Emulador remoto y headless (`-no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel on`), dispositivo `emulator-5554`.
+- Android Emulator 37.2.13, sin Android Studio.
+- Paquete `com.example.taskflow`, actividad `.MainActivity`. Es el `applicationId` y la actividad de este repositorio.
+- APK de depuración (`flutter build apk --debug`) instalada en el emulador. Las imágenes se guardaron con `adb exec-out screencap -p`.
+- El video `sesion-02-ejecucion.mp4` es de ese mismo emulador remoto (Android 15, API 35, AVD `taskflow_api35`, Flutter 3.47.9), no de un teléfono. El contenedor es H.264, 1080×2400, 24 fps, 21,8 s (21,83 s) y no tiene audio. El reloj de la barra marca 7:06.
 
-La imagen corresponde a la pantalla de bienvenida que ya está en `main` de este repositorio, antes del commit de documentación. `lib/main.dart` no se modificó para la captura ni en esta rama.
+## Código fuente
 
-| | |
-|---|---|
-| Repositorio | https://github.com/Mildreth-SC/taskflow |
-| Rama para entregar | [`sesion-01`](https://github.com/Mildreth-SC/taskflow/tree/sesion-01) |
-| Código de la pantalla | `64378dd4c65d75f4143bf6bcd3442b30b03ea893` en `main` |
-| Commit de esa pantalla | `feat: crear pantalla de bienvenida` |
-| Video | https://github.com/Mildreth-SC/taskflow/blob/sesion-01/docs/evidencias/sesion-01-ejecucion.mp4 |
+Las imágenes y el video muestran el panel de `lib/main.dart` de esta rama `sesion-02`. El commit de la rama reúne ese panel, la guía y estas evidencias. La entrega es esta rama.
 
-## Archivos
+- Repositorio: https://github.com/Mildreth-SC/taskflow
+- Rama para entregar: https://github.com/Mildreth-SC/taskflow/tree/sesion-02
+- Video: https://github.com/Mildreth-SC/taskflow/blob/sesion-02/docs/evidencias/sesion-02-ejecucion.mp4
 
-`docs/evidencias/sesion-01-bienvenida.png` (1080×2400).
+## Archivos de esta sesión
 
-`docs/evidencias/sesion-01-ejecucion.mp4` (10,9 s, H.264, 1080×2400). Es el archivo de video. La entrega de esta sesión es https://github.com/Mildreth-SC/taskflow/tree/sesion-01 y el video https://github.com/Mildreth-SC/taskflow/blob/sesion-01/docs/evidencias/sesion-01-ejecucion.mp4.
+Se publican las dos capturas y el video de la sesión 2. Esta rama no mezcla las evidencias de las otras sesiones. Cada sesión se entrega en su rama: `sesion-01`, `sesion-02`, `sesion-03` y `sesion-04`. El índice está en https://github.com/Mildreth-SC/taskflow/tree/sesion-04.
 
-En ambos se ve la pantalla fija: **TaskFlow**, «¡Hola, Mildreth Guanoluisa!», «Cada tarea terminada te acerca a tu meta.», «Bienvenido/a a Desarrollo de aplicaciones móviles.» y «Tareas pendientes: 3». El contador no cambia durante el video.
+| Archivo | Qué se ve |
+| --- | --- |
+| [docs/evidencias/sesion-02-en-cero-meta-5.png](docs/evidencias/sesion-02-en-cero-meta-5.png) | PNG 1080×2400. Tras dos toques en **Agregar tarea** y cinco en **Completar una tarea**: pendientes 0, `Completadas hoy: 5 de 5`, mensaje `¡Excelente! No tienes tareas pendientes.` El botón de completar se ve deshabilitado. |
+| [docs/evidencias/sesion-02-en-uno.png](docs/evidencias/sesion-02-en-uno.png) | PNG 1080×2400. Un toque más en **Agregar tarea**: pendientes 1, completadas siguen en 5 de 5, el mensaje vuelve a `Aún tienes tareas por organizar.` y **Completar una tarea** se ve activo. |
+| [docs/evidencias/sesion-02-ejecucion.mp4](docs/evidencias/sesion-02-ejecucion.mp4) | Video H.264, 1080×2400, 21,8 s. De 3 pendientes y 0 de 5 pasa, con dos altas, a 5 pendientes; cinco completadas lo dejan en 0 y 5 de 5, con **Completar una tarea** deshabilitado; una alta más lo deja en 1 pendiente y 5 de 5. |
+
+Las dos imágenes muestran la barra de TaskFlow, el ícono de tarea, `¡Hola, Mildreth Guanoluisa!`, el mensaje motivacional y la bienvenida al curso. Su reloj marca 5:32. El video muestra el mismo panel con el reloj en 7:06.
+
+Pendientes en 0 y meta diaria cumplida:
+
+![Pendientes en 0 y completadas hoy 5 de 5, con Completar una tarea deshabilitado](docs/evidencias/sesion-02-en-cero-meta-5.png)
+
+Pendientes en 1, con la meta del día ya en 5 de 5:
+
+![Pendientes en 1, completadas hoy 5 de 5 y Completar una tarea activo](docs/evidencias/sesion-02-en-uno.png)
+
+Ejecución completa en el emulador, con el mismo recorrido:
+
+[sesion-02-ejecucion.mp4](docs/evidencias/sesion-02-ejecucion.mp4)
+
+## Qué no son
+
+No sustituyen una captura hecha en el teléfono de la estudiante, si el aula pide además esa evidencia. Sí son pantallas reales del emulador `taskflow_api35`.
