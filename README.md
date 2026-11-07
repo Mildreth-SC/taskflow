@@ -1,66 +1,73 @@
 # TaskFlow
 
-App de tareas del curso de Flutter. En esta versión la pantalla principal es un listado local de cinco tareas. La guía de la sesión sigue en [LEEME.md](LEEME.md). La procedencia de las capturas está en [EVIDENCIAS.md](EVIDENCIAS.md).
+App de tareas del curso de Flutter. En esta sesión, `go_router` abre el detalle de una tarea y permite volver al listado. La guía del laboratorio sigue en [LEEME.md](LEEME.md). La procedencia de las capturas está en [EVIDENCIAS.md](EVIDENCIAS.md).
 
-**Autora:** Mildreth Guanoluisa
+**Video de la ejecución (15,2 s):** [sesion-04-ejecucion.mp4](docs/evidencias/sesion-04-ejecucion.mp4). GitHub no lo reproduce dentro del README; el enlace abre el archivo para verlo o descargarlo.
+
+## Entregas de las cuatro sesiones
+
+Cada sesión se entrega con su propia rama de https://github.com/Mildreth-SC/taskflow. La rama muestra el código, el README, las evidencias y el video de esa sesión. Estas ramas se armaron el 7 de noviembre de 2026 a partir de las instantáneas ya publicadas. Los commits nuevos tienen la fecha de esta reconstrucción. Las capturas y los videos son los archivos reales de cada sesión.
+
+| Sesión | Qué muestra la rama | Rama para entregar | Video |
+| --- | --- | --- | --- |
+| 1 | Pantalla de bienvenida | https://github.com/Mildreth-SC/taskflow/tree/sesion-01 | https://github.com/Mildreth-SC/taskflow/blob/sesion-01/docs/evidencias/sesion-01-ejecucion.mp4 |
+| 2 | Panel con `setState`, meta de 5 y sin negativos | https://github.com/Mildreth-SC/taskflow/tree/sesion-02 | https://github.com/Mildreth-SC/taskflow/blob/sesion-02/docs/evidencias/sesion-02-ejecucion.mp4 |
+| 3 | Listado con `TaskCard`, sin navegación | https://github.com/Mildreth-SC/taskflow/tree/sesion-03 | https://github.com/Mildreth-SC/taskflow/blob/sesion-03/docs/evidencias/sesion-03-ejecucion.mp4 |
+| 4 | Detalle con `go_router` | https://github.com/Mildreth-SC/taskflow/tree/sesion-04 | https://github.com/Mildreth-SC/taskflow/blob/sesion-04/docs/evidencias/sesion-04-ejecucion.mp4 |
 
 ## Entrega de esta sesión
 
-La sesión 3 se entrega con la rama `sesion-03` de este repositorio. Esa rama muestra el listado con `TaskCard`, sin navegación, este README, las evidencias y el video.
+La sesión 4 se entrega con la rama `sesion-04`. Esa rama muestra el detalle con `go_router`, este README, las evidencias y el video.
 
 - Repositorio: https://github.com/Mildreth-SC/taskflow
-- Rama para entregar: https://github.com/Mildreth-SC/taskflow/tree/sesion-03
-- Video: https://github.com/Mildreth-SC/taskflow/blob/sesion-03/docs/evidencias/sesion-03-ejecucion.mp4
-- Listado completo: https://github.com/Mildreth-SC/taskflow/blob/sesion-03/docs/evidencias/sesion-03-listado-completo.png
-- Antes de desplazar: https://github.com/Mildreth-SC/taskflow/blob/sesion-03/docs/evidencias/sesion-03-antes-de-desplazar.png
-- Después de desplazar: https://github.com/Mildreth-SC/taskflow/blob/sesion-03/docs/evidencias/sesion-03-despues-de-desplazar.png
-
-El índice con las cuatro ramas de entrega está en https://github.com/Mildreth-SC/taskflow/tree/sesion-04.
+- Rama para entregar: https://github.com/Mildreth-SC/taskflow/tree/sesion-04
+- Video de la ejecución: https://github.com/Mildreth-SC/taskflow/blob/sesion-04/docs/evidencias/sesion-04-ejecucion.mp4
+- Video anterior de 9 s: https://github.com/Mildreth-SC/taskflow/blob/sesion-04/docs/evidencias/sesion-04-listado-detalle-regreso.mp4
+- Listado: https://github.com/Mildreth-SC/taskflow/blob/sesion-04/docs/evidencias/sesion-04-listado.png
+- Detalle: https://github.com/Mildreth-SC/taskflow/blob/sesion-04/docs/evidencias/sesion-04-detalle.png
+- Regreso: https://github.com/Mildreth-SC/taskflow/blob/sesion-04/docs/evidencias/sesion-04-regreso.png
 
 ## Objetivo
 
-Mostrar, en una sola pantalla, las tareas de demostración de este proyecto: título, prioridad, descripción y si ya están completadas. Cada tarjeta incluye una señal visual de detalle. Esa pantalla de detalle todavía no existe.
+Mostrar un listado de tareas de ejemplo y, al tocar una tarjeta, la ficha de esa tarea. La ruta del detalle lleva el id (`/task/:id`). Al volver, el listado sigue en pantalla.
 
 ## Qué hace la app
 
-Todo el código de la interfaz está en `lib/main.dart`.
+El código está en `lib/main.dart`.
 
-- `Task` guarda `id`, `title`, `description`, `priority` e `isCompleted`.
-- `demoTasks` define cinco tareas de este proyecto.
-- `TaskCard` pinta cada tarea. El subtítulo junta la prioridad y la descripción con `'${task.priority} · ${task.description}'`. Si `isCompleted` es verdadero, el ícono es `Icons.check_circle` en verde; si es falso, es `Icons.radio_button_unchecked`.
-- `TaskListScreen` muestra la barra «Mis tareas» y un `ListView.builder` que crea una `TaskCard` por elemento de `demoTasks`.
-- El `Icons.chevron_right` de cada tarjeta es la acción visual de detalle. `TaskCard` no define `onTap` ni una ruta: el chevron no abre otra pantalla.
-
-`TaskFlowApp` usa Material 3 y `ColorScheme.fromSeed` con el color `0xFF1F6F5B`. El título de la aplicación es TaskFlow.
-
-| Id | Título | Prioridad | Completada |
-| --- | --- | --- | --- |
-| 1 | Crear el proyecto TaskFlow | Alta | sí |
-| 2 | Personalizar la bienvenida | Media | sí |
-| 3 | Probar el panel de tareas | Alta | no |
-| 4 | Revisar el listado | Media | no |
-| 5 | Preparar el detalle | Baja | no |
+- `GoRouter` define dos rutas: `/` (`TaskListScreen`) y `/task/:id` (`TaskDetailScreen`).
+- El listado se titula **Mis tareas**. Cada tarjeta muestra el título, la prioridad, la descripción y un icono de estado (completada o pendiente).
+- Al tocar una tarjeta, `context.push('/task/${id}')` abre el detalle. El detalle busca esa tarea en `demoTasks`.
+- El detalle muestra el título, la descripción completa, un chip `Prioridad: …`, el texto `Estado: completada` o `Estado: pendiente`, y una acción contextual cuyo icono y frase cambian con el estado.
+- **Volver al listado** llama a `context.pop()`. La barra de la pantalla de detalle también muestra la flecha atrás.
+- Hay cinco tareas de ejemplo, con prioridades Alta, Media y Baja.
+- El tema es Material 3, con color de semilla `#1F6F5B`.
 
 ## Requisitos
 
-Tomados de `pubspec.yaml` y `pubspec.lock`:
+Declarados en `pubspec.yaml`:
 
-- Dart `>=3.13.7 <4.0.0` (`environment.sdk: ^3.13.7`)
-- Flutter `>=3.18.0-18.0.pre.54` (restricción del lockfile)
-- Dependencia `flutter` (SDK)
-- Dependencia `cupertino_icons: ^1.0.8`
-- Desarrollo: `flutter_test` (SDK) y `flutter_lints: ^6.0.0`
+| Paquete | Restricción |
+| --- | --- |
+| Dart | `sdk: ^3.13.7` |
+| Flutter | SDK |
+| `go_router` | `^18.1.3` |
+| `cupertino_icons` | `^1.0.8` |
+| `flutter_test` | SDK, dependencia de desarrollo |
+| `flutter_lints` | `^6.0.0`, dependencia de desarrollo |
 
-El paquete no se publica en pub.dev (`publish_to: none`). La versión de la app es `1.0.0+1`.
+`pubspec.lock` deja resueltos `go_router` 18.1.3, `cupertino_icons` 1.0.9 y `flutter_lints` 6.0.0. El mismo archivo anota Dart `>=3.13.7 <4.0.0` y Flutter `>=3.47.0`. La app usa `publish_to: none` y la versión `1.0.0+1`.
 
-## Ejecutar y probar
+## Ejecutar
 
 ```bash
 flutter pub get
 flutter run
 ```
 
-Comandos de comprobación que ya documenta [LEEME.md](LEEME.md):
+## Comprobar
+
+Los comandos que ya indica [LEEME.md](LEEME.md):
 
 ```bash
 dart format lib
@@ -68,49 +75,55 @@ flutter analyze
 flutter test
 ```
 
-`flutter test` ejecuta las dos pruebas que hay en `test/widget_test.dart`:
-
-- `el listado muestra cinco tareas con su estado`
-- `la lista se desplaza hasta la última tarea`
+`flutter test` ejecuta la prueba que está en `test/widget_test.dart`: `cada tarjeta abre su detalle y se puede volver`. Esa prueba abre las tareas «Crear el proyecto TaskFlow», «Probar el panel de tareas» y «Preparar el detalle», y comprueba la ruta (`/task/1`, `/task/3`, `/task/5` y la vuelta a `/`), la prioridad, el estado, la acción contextual y el regreso al listado.
 
 ## Estructura
 
-```text
-lib/main.dart                 listado, modelo Task y TaskCard
-test/widget_test.dart         pruebas del listado
-pubspec.yaml                  nombre, SDK y dependencias
-LEEME.md                      guía de la sesión 3
-EVIDENCIAS.md                 procedencia de las capturas
-docs/evidencias/              PNG del emulador y sesion-03-ejecucion.mp4
-android/ ios/ linux/ macos/ web/ windows/   plataformas del proyecto Flutter
-```
+- `lib/main.dart` — interfaz, datos de ejemplo y rutas
+- `test/widget_test.dart` — prueba de navegación
+- `pubspec.yaml`, `pubspec.lock` — dependencias
+- `LEEME.md` — guía de la sesión
+- `EVIDENCIAS.md` — procedencia de las capturas
+- `docs/evidencias/` — PNG y MP4 de esta sesión
+- `android/` — aplicación `com.example.taskflow`
+- `ios/`, `linux/`, `macos/`, `web/`, `windows/` — plataformas del proyecto Flutter
 
-## Capturas
+## Evidencias en el emulador
 
-Emulador remoto Android 15 (API 35), AVD `taskflow_api35`, con Flutter 3.47.9. Son capturas reales de ese emulador. El detalle de tamaños está en [EVIDENCIAS.md](EVIDENCIAS.md). La entrega de esta sección es https://github.com/Mildreth-SC/taskflow/tree/sesion-03.
+Capturas del emulador Android remoto AVD `taskflow_api35` (Android 15, API 35), tomadas con Flutter 3.47.9. El detalle está en [EVIDENCIAS.md](EVIDENCIAS.md). La entrega de esta sección es https://github.com/Mildreth-SC/taskflow/tree/sesion-04.
 
-### Listado completo (1080×2400)
+### Listado
 
-Pantalla completa del AVD. Las cinco tarjetas se ven a la vez: dos completadas, con el ícono verde, y tres pendientes.
+Ruta `/`. Título **Mis tareas**. Las dos primeras tarjetas están completadas y las tres siguientes pendientes. Cada una muestra prioridad y descripción.
 
-![Listado completo de las cinco tareas en el emulador, 1080×2400](docs/evidencias/sesion-03-listado-completo.png)
+![Listado Mis tareas: cinco tarjetas con prioridad y estado](docs/evidencias/sesion-04-listado.png)
 
-### Antes de desplazar (1080×1200)
+### Detalle
 
-La ventana del emulador está en 1080×1200. Se ve la parte de arriba del listado, desde «Crear el proyecto TaskFlow» hasta «Revisar el listado», cortada en el borde inferior. «Preparar el detalle» queda fuera.
+Detalle de **Probar el panel de tareas** (id 3, ruta `/task/3`): descripción, chip **Prioridad: Alta**, **Estado: pendiente**, acción contextual de tarea pendiente y el botón **Volver al listado**.
 
-![Listado antes de desplazar, ventana 1080×1200](docs/evidencias/sesion-03-antes-de-desplazar.png)
+![Detalle de Probar el panel de tareas, prioridad Alta y estado pendiente](docs/evidencias/sesion-04-detalle.png)
 
-### Después de desplazar (1080×1200)
+### Regreso
 
-La misma ventana de 1080×1200, después del desplazamiento. «Crear el proyecto TaskFlow» ya no está en pantalla y aparece «Preparar el detalle».
+El listado **Mis tareas** otra vez, después de **Volver al listado**. Las cinco tarjetas siguen en pantalla.
 
-![Listado después de desplazar, ventana 1080×1200](docs/evidencias/sesion-03-despues-de-desplazar.png)
+![Listado Mis tareas después de volver del detalle](docs/evidencias/sesion-04-regreso.png)
 
-## Recorrido
+### Video de la ejecución
 
-[sesion-03-ejecucion.mp4](docs/evidencias/sesion-03-ejecucion.mp4)
+Enlace principal. `sesion-04-ejecucion.mp4` dura 15,2 s (15,17 s medidos). Es H.264, 1080×2400, grabado en el emulador Android remoto (Android 15, API 35) con Flutter 3.47.9. El recorrido es este: el listado **Mis tareas**, el detalle de **Probar el panel de tareas** (chip **Prioridad: Alta**, **Estado: pendiente**, acción contextual de tarea pendiente) y el regreso con **Volver al listado**.
 
-Enlace de esta rama para entregar el video: https://github.com/Mildreth-SC/taskflow/blob/sesion-03/docs/evidencias/sesion-03-ejecucion.mp4
+[Abrir o descargar sesion-04-ejecucion.mp4](docs/evidencias/sesion-04-ejecucion.mp4)
 
-Grabación de 16 s en H.264. La ventana útil del emulador es 1080×1200 y el fotograma del archivo es 1080×2400, con bandas negras. El recorrido muestra el listado de cinco tareas, dos con ícono verde, el desplazamiento hasta «Preparar el detalle» y el regreso al inicio. La procedencia está en [EVIDENCIAS.md](EVIDENCIAS.md).
+Enlace de esta rama para entregar el video: https://github.com/Mildreth-SC/taskflow/blob/sesion-04/docs/evidencias/sesion-04-ejecucion.mp4
+
+GitHub no reproduce este MP4 dentro del README. El enlace abre el archivo para verlo o descargarlo.
+
+### Video anterior de 9 s
+
+Se conserva `sesion-04-listado-detalle-regreso.mp4` (9,13 s). Es la grabación anterior del mismo recorrido, con la barra de estado en las 5:33. El video de 15,2 s, con la barra en las 7:02, es el de la ejecución de arriba.
+
+[Abrir o descargar sesion-04-listado-detalle-regreso.mp4](docs/evidencias/sesion-04-listado-detalle-regreso.mp4)
+
+Enlace en esta rama: https://github.com/Mildreth-SC/taskflow/blob/sesion-04/docs/evidencias/sesion-04-listado-detalle-regreso.mp4
