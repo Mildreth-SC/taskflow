@@ -1,64 +1,66 @@
 # TaskFlow
 
-Aplicación de tareas del curso **Desarrollo de aplicaciones móviles**. Esta entrega es la sesión 2: la bienvenida pasa a ser un panel con estado, todo en `lib/main.dart`. La guía de la sesión se conserva en [LEEME.md](LEEME.md). La procedencia de las capturas está en [EVIDENCIAS.md](EVIDENCIAS.md).
+App de tareas del curso de Flutter. En esta versión la pantalla principal es un listado local de cinco tareas. La guía de la sesión sigue en [LEEME.md](LEEME.md). La procedencia de las capturas está en [EVIDENCIAS.md](EVIDENCIAS.md).
 
-**Estudiante:** Mildreth Guanoluisa
+**Autora:** Mildreth Guanoluisa
 
 ## Entrega de esta sesión
 
-La sesión 2 se entrega con la rama `sesion-02` de este repositorio. Esa rama muestra el panel con estado, este README, las evidencias y el video.
+La sesión 3 se entrega con la rama `sesion-03` de este repositorio. Esa rama muestra el listado con `TaskCard`, sin navegación, este README, las evidencias y el video.
 
 - Repositorio: https://github.com/Mildreth-SC/taskflow
-- Rama para entregar: https://github.com/Mildreth-SC/taskflow/tree/sesion-02
-- Video: https://github.com/Mildreth-SC/taskflow/blob/sesion-02/docs/evidencias/sesion-02-ejecucion.mp4
-- Captura en cero: https://github.com/Mildreth-SC/taskflow/blob/sesion-02/docs/evidencias/sesion-02-en-cero-meta-5.png
-- Captura en uno: https://github.com/Mildreth-SC/taskflow/blob/sesion-02/docs/evidencias/sesion-02-en-uno.png
+- Rama para entregar: https://github.com/Mildreth-SC/taskflow/tree/sesion-03
+- Video: https://github.com/Mildreth-SC/taskflow/blob/sesion-03/docs/evidencias/sesion-03-ejecucion.mp4
+- Listado completo: https://github.com/Mildreth-SC/taskflow/blob/sesion-03/docs/evidencias/sesion-03-listado-completo.png
+- Antes de desplazar: https://github.com/Mildreth-SC/taskflow/blob/sesion-03/docs/evidencias/sesion-03-antes-de-desplazar.png
+- Después de desplazar: https://github.com/Mildreth-SC/taskflow/blob/sesion-03/docs/evidencias/sesion-03-despues-de-desplazar.png
 
 El índice con las cuatro ramas de entrega está en https://github.com/Mildreth-SC/taskflow/tree/sesion-04.
 
 ## Objetivo
 
-Mostrar cuántas tareas quedan pendientes y cuántas se completaron hoy, y actualizar esos números en la misma pantalla. `WelcomeScreen` es un `StatefulWidget`. Los contadores viven en `_WelcomeScreenState` y cada acción redibuja la interfaz con `setState`.
+Mostrar, en una sola pantalla, las tareas de demostración de este proyecto: título, prioridad, descripción y si ya están completadas. Cada tarjeta incluye una señal visual de detalle. Esa pantalla de detalle todavía no existe.
 
-Al abrir hay 3 tareas pendientes y 0 completadas. La meta del día es 5 (`dailyGoal`).
+## Qué hace la app
 
-## Comportamiento
+Todo el código de la interfaz está en `lib/main.dart`.
 
-- **Agregar tarea** llama a `_addTask`. Dentro de `setState` suma 1 a `pendingTasks`.
-- **Completar una tarea** llama a `_completeTask`. Si `pendingTasks` es 0, la función regresa sin modificar el estado. Si hay pendientes, resta 1 y, solo cuando `completedTasks` es menor que 5, suma 1 a las completadas de hoy.
-- Las pendientes no bajan de 0. El botón queda deshabilitado (`onPressed: null`) cuando el contador está en cero, y `_completeTask` tampoco decrementa en ese caso.
-- **Completadas hoy** no pasa de 5. Si la meta ya está llena y se agrega otra tarea, completarla baja las pendientes y deja el contador del día en 5.
-- Con 0 pendientes el texto es `¡Excelente! No tienes tareas pendientes.` Con cualquier otro valor es `Aún tienes tareas por organizar.`
-- El saludo usa el nombre `Mildreth Guanoluisa`. Se mantienen el mensaje `Cada tarea terminada te acerca a tu meta.`, el ícono `Icons.task_alt` y la paleta verde `Color(0xFF1F6F5B)` con Material 3.
+- `Task` guarda `id`, `title`, `description`, `priority` e `isCompleted`.
+- `demoTasks` define cinco tareas de este proyecto.
+- `TaskCard` pinta cada tarea. El subtítulo junta la prioridad y la descripción con `'${task.priority} · ${task.description}'`. Si `isCompleted` es verdadero, el ícono es `Icons.check_circle` en verde; si es falso, es `Icons.radio_button_unchecked`.
+- `TaskListScreen` muestra la barra «Mis tareas» y un `ListView.builder` que crea una `TaskCard` por elemento de `demoTasks`.
+- El `Icons.chevron_right` de cada tarjeta es la acción visual de detalle. `TaskCard` no define `onTap` ni una ruta: el chevron no abre otra pantalla.
+
+`TaskFlowApp` usa Material 3 y `ColorScheme.fromSeed` con el color `0xFF1F6F5B`. El título de la aplicación es TaskFlow.
+
+| Id | Título | Prioridad | Completada |
+| --- | --- | --- | --- |
+| 1 | Crear el proyecto TaskFlow | Alta | sí |
+| 2 | Personalizar la bienvenida | Media | sí |
+| 3 | Probar el panel de tareas | Alta | no |
+| 4 | Revisar el listado | Media | no |
+| 5 | Preparar el detalle | Baja | no |
 
 ## Requisitos
 
-Declarados en `pubspec.yaml` (versión de la app `1.0.0+1`, `publish_to: none`):
+Tomados de `pubspec.yaml` y `pubspec.lock`:
 
-| Requisito | Versión en `pubspec.yaml` | En `pubspec.lock` |
-| --- | --- | --- |
-| Dart SDK | `^3.13.7` | `>=3.13.7 <4.0.0` |
-| Flutter | SDK | `>=3.18.0-18.0.pre.54` |
-| `cupertino_icons` | `^1.0.8` | `1.0.9` |
-| `flutter_test` | SDK (desarrollo) | SDK |
-| `flutter_lints` | `^6.0.0` | `6.0.0` |
+- Dart `>=3.13.7 <4.0.0` (`environment.sdk: ^3.13.7`)
+- Flutter `>=3.18.0-18.0.pre.54` (restricción del lockfile)
+- Dependencia `flutter` (SDK)
+- Dependencia `cupertino_icons: ^1.0.8`
+- Desarrollo: `flutter_test` (SDK) y `flutter_lints: ^6.0.0`
 
-Hace falta el SDK de Flutter, con un Dart que cumpla `^3.13.7`. Las capturas se tomaron con Flutter 3.47.9. Ese dato y el emulador están en [EVIDENCIAS.md](EVIDENCIAS.md).
+El paquete no se publica en pub.dev (`publish_to: none`). La versión de la app es `1.0.0+1`.
 
-## Ejecutar
+## Ejecutar y probar
 
 ```bash
 flutter pub get
 flutter run
 ```
 
-`flutter pub get` descarga las dependencias del `pubspec.yaml`. `flutter run` abre la app en el dispositivo o emulador que Flutter tenga conectado. La interfaz está en `lib/main.dart`.
-
-## Comprobar
-
-Hay una prueba de widgets en `test/widget_test.dart`: `el panel agrega, completa y respeta la meta de hoy`. Arranca en 3 pendientes y 0 de 5, pulsa **Agregar tarea** dos veces (queda en 5), completa cinco veces (queda en 0 y 5 de 5, con **Completar una tarea** deshabilitado) y comprueba que otra tarea nueva no sube la meta por encima de 5.
-
-La guía de la sesión indica estos comandos:
+Comandos de comprobación que ya documenta [LEEME.md](LEEME.md):
 
 ```bash
 dart format lib
@@ -66,41 +68,49 @@ flutter analyze
 flutter test
 ```
 
-`flutter analyze` usa `analysis_options.yaml`, que incluye `package:flutter_lints/flutter.yaml`.
+`flutter test` ejecuta las dos pruebas que hay en `test/widget_test.dart`:
+
+- `el listado muestra cinco tareas con su estado`
+- `la lista se desplaza hasta la última tarea`
 
 ## Estructura
 
 ```text
-lib/main.dart                 Pantalla y estado de la sesión 2
-test/widget_test.dart         Prueba de widgets del panel
-pubspec.yaml                  Nombre, SDK y dependencias
-pubspec.lock                  Versiones resueltas
-analysis_options.yaml         Reglas del analizador
-LEEME.md                      Guía original de la sesión 2
-EVIDENCIAS.md                 Procedencia de las capturas
-docs/evidencias/              PNG y video del emulador de esta sesión
-android/                      Proyecto Android (com.example.taskflow)
-ios/ linux/ macos/ web/ windows/   Proyectos de plataforma de Flutter
+lib/main.dart                 listado, modelo Task y TaskCard
+test/widget_test.dart         pruebas del listado
+pubspec.yaml                  nombre, SDK y dependencias
+LEEME.md                      guía de la sesión 3
+EVIDENCIAS.md                 procedencia de las capturas
+docs/evidencias/              PNG del emulador y sesion-03-ejecucion.mp4
+android/ ios/ linux/ macos/ web/ windows/   plataformas del proyecto Flutter
 ```
 
 ## Capturas
 
-Emulador Android 15 (API 35), AVD `taskflow_api35`. Son capturas reales de ese emulador remoto, no de un teléfono físico. El código de la app es el de esta rama `sesion-02`. La entrega de esta sección es https://github.com/Mildreth-SC/taskflow/tree/sesion-02.
+Emulador remoto Android 15 (API 35), AVD `taskflow_api35`, con Flutter 3.47.9. Son capturas reales de ese emulador. El detalle de tamaños está en [EVIDENCIAS.md](EVIDENCIAS.md). La entrega de esta sección es https://github.com/Mildreth-SC/taskflow/tree/sesion-03.
 
-Pendientes en 0, meta diaria en 5 de 5 y **Completar una tarea** deshabilitado:
+### Listado completo (1080×2400)
 
-![Pendientes en 0 y completadas hoy 5 de 5, con Completar una tarea deshabilitado](docs/evidencias/sesion-02-en-cero-meta-5.png)
+Pantalla completa del AVD. Las cinco tarjetas se ven a la vez: dos completadas, con el ícono verde, y tres pendientes.
 
-Una pendiente otra vez. La meta sigue en 5 de 5 y **Completar una tarea** vuelve a estar activo:
+![Listado completo de las cinco tareas en el emulador, 1080×2400](docs/evidencias/sesion-03-listado-completo.png)
 
-![Pendientes en 1, completadas hoy 5 de 5 y Completar una tarea activo](docs/evidencias/sesion-02-en-uno.png)
+### Antes de desplazar (1080×1200)
 
-## Video
+La ventana del emulador está en 1080×1200. Se ve la parte de arriba del listado, desde «Crear el proyecto TaskFlow» hasta «Revisar el listado», cortada en el borde inferior. «Preparar el detalle» queda fuera.
 
-La misma pantalla, grabada en el emulador remoto Android 15 (API 35, AVD `taskflow_api35`), con Flutter 3.47.9. No es un teléfono físico. El archivo es H.264, 1080×2400 y dura 21,8 s.
+![Listado antes de desplazar, ventana 1080×1200](docs/evidencias/sesion-03-antes-de-desplazar.png)
 
-[sesion-02-ejecucion.mp4](docs/evidencias/sesion-02-ejecucion.mp4)
+### Después de desplazar (1080×1200)
 
-Enlace de esta rama para entregar el video: https://github.com/Mildreth-SC/taskflow/blob/sesion-02/docs/evidencias/sesion-02-ejecucion.mp4
+La misma ventana de 1080×1200, después del desplazamiento. «Crear el proyecto TaskFlow» ya no está en pantalla y aparece «Preparar el detalle».
 
-Empieza en 3 pendientes y `Completadas hoy: 0 de 5`. Dos toques en **Agregar tarea** dejan 5 pendientes y 0 completadas. Cinco toques en **Completar una tarea** llegan a 0 pendientes, `Completadas hoy: 5 de 5`, el mensaje `¡Excelente! No tienes tareas pendientes.` y el botón **Completar una tarea** deshabilitado. Un toque más en **Agregar tarea** deja 1 pendiente; las completadas siguen en 5 de 5 y el botón vuelve a estar activo.
+![Listado después de desplazar, ventana 1080×1200](docs/evidencias/sesion-03-despues-de-desplazar.png)
+
+## Recorrido
+
+[sesion-03-ejecucion.mp4](docs/evidencias/sesion-03-ejecucion.mp4)
+
+Enlace de esta rama para entregar el video: https://github.com/Mildreth-SC/taskflow/blob/sesion-03/docs/evidencias/sesion-03-ejecucion.mp4
+
+Grabación de 16 s en H.264. La ventana útil del emulador es 1080×1200 y el fotograma del archivo es 1080×2400, con bandas negras. El recorrido muestra el listado de cinco tareas, dos con ícono verde, el desplazamiento hasta «Preparar el detalle» y el regreso al inicio. La procedencia está en [EVIDENCIAS.md](EVIDENCIAS.md).
