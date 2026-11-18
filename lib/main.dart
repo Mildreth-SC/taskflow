@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'task.dart';
+
 void main() {
   runApp(const TaskFlowApp());
 }
@@ -23,29 +25,14 @@ class TaskFlowApp extends StatelessWidget {
   }
 }
 
-class Task {
-  const Task({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.priority,
-    required this.isCompleted,
-  });
-
-  final int id;
-  final String title;
-  final String description;
-  final String priority;
-  final bool isCompleted;
-}
-
-const demoTasks = [
+const demoTasks = <Task>[
   Task(
     id: 1,
     title: 'Crear el proyecto TaskFlow',
     description: 'Generar la app y revisar la carpeta android',
     priority: 'Alta',
     isCompleted: true,
+    userId: 1,
   ),
   Task(
     id: 2,
@@ -53,6 +40,7 @@ const demoTasks = [
     description: 'Escribir tu nombre, el mensaje y el color',
     priority: 'Media',
     isCompleted: true,
+    userId: 1,
   ),
   Task(
     id: 3,
@@ -60,6 +48,7 @@ const demoTasks = [
     description: 'Agregar y completar tareas sin pasar de cero',
     priority: 'Alta',
     isCompleted: false,
+    userId: 1,
   ),
   Task(
     id: 4,
@@ -67,6 +56,7 @@ const demoTasks = [
     description: 'Comprobar título, prioridad y estado de cada tarjeta',
     priority: 'Media',
     isCompleted: false,
+    userId: 1,
   ),
   Task(
     id: 5,
@@ -74,8 +64,16 @@ const demoTasks = [
     description: 'Dejar lista la acción para abrir una tarea',
     priority: 'Baja',
     isCompleted: false,
+    userId: 1,
   ),
 ];
+
+Task? findTask(int? id) {
+  for (final task in demoTasks) {
+    if (task.id == id) return task;
+  }
+  return null;
+}
 
 final appRouter = GoRouter(
   routes: [
@@ -83,8 +81,8 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/task/:id',
       builder: (context, state) {
-        final taskId = int.parse(state.pathParameters['id']!);
-        return TaskDetailScreen(taskId: taskId);
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        return TaskDetailScreen(task: findTask(id));
       },
     ),
   ],
@@ -136,50 +134,76 @@ class TaskListScreen extends StatelessWidget {
 }
 
 class TaskDetailScreen extends StatelessWidget {
-  const TaskDetailScreen({super.key, required this.taskId});
+  const TaskDetailScreen({super.key, required this.task});
 
-  final int taskId;
+  final Task? task;
 
   @override
   Widget build(BuildContext context) {
-    final task = demoTasks.firstWhere((item) => item.id == taskId);
+    final selected = task;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Detalle de tarea')),
       body: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(task.title, style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 16),
-            Text(task.description),
-            const SizedBox(height: 16),
-            Chip(label: Text('Prioridad: ${task.priority}')),
-            const SizedBox(height: 12),
-            Text(task.isCompleted ? 'Estado: completada' : 'Estado: pendiente'),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Icon(task.isCompleted ? Icons.verified : Icons.flag_outlined),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    task.isCompleted
-                        ? 'Acción contextual: esta tarea ya está completada.'
-                        : 'Acción contextual: esta tarea sigue pendiente.',
+        child: selected == null
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('No se encontró esta tarea.'),
+                  const SizedBox(height: 16),
+                  FilledButton.tonalIcon(
+                    onPressed: () => context.go('/'),
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('Volver al listado'),
                   ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            FilledButton.tonalIcon(
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Volver al listado'),
-            ),
-          ],
-        ),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    selected.title,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(selected.description),
+                  const SizedBox(height: 16),
+                  Chip(label: Text('Prioridad: ${selected.priority}')),
+                  const SizedBox(height: 12),
+                  Text(
+                    selected.isCompleted
+                        ? 'Estado: completada'
+                        : 'Estado: pendiente',
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Usuario: ${selected.userId}'),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(
+                        selected.isCompleted
+                            ? Icons.verified
+                            : Icons.flag_outlined,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          selected.isCompleted
+                              ? 'Acción contextual: esta tarea ya está completada.'
+                              : 'Acción contextual: esta tarea sigue pendiente.',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  FilledButton.tonalIcon(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('Volver al listado'),
+                  ),
+                ],
+              ),
       ),
     );
   }

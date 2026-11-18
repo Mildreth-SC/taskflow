@@ -2,8 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taskflow/main.dart';
+import 'package:taskflow/task.dart';
 
 void main() {
+  test('Task.fromJson convierte el JSON de la API', () {
+    final task = Task.fromJson(const {
+      'id': 7,
+      'title': 'Preparar exposición',
+      'description': 'Organizar diapositivas y practicar',
+      'priority': 'Alta',
+      'isCompleted': false,
+      'userId': 1,
+    });
+    expect(task.id, 7);
+    expect(task.priority, 'Alta');
+    expect(task.isCompleted, isFalse);
+    expect(task.userId, 1);
+  });
+
+  test('findTask devuelve null si el id no existe', () {
+    expect(findTask(99), isNull);
+    expect(findTask(1)?.title, 'Crear el proyecto TaskFlow');
+  });
+
   testWidgets('cada tarjeta abre su detalle y se puede volver', (tester) async {
     tester.view.physicalSize = const Size(400, 900);
     tester.view.devicePixelRatio = 1;
@@ -24,6 +45,7 @@ void main() {
       find.text('Acción contextual: esta tarea ya está completada.'),
       findsOneWidget,
     );
+    expect(find.text('Usuario: 1'), findsOneWidget);
     expect(routeOf(tester), '/task/1');
 
     await tester.tap(find.text('Volver al listado'));
