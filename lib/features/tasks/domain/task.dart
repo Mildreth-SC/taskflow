@@ -16,6 +16,18 @@ class Task {
   final bool isCompleted;
   final int userId;
 
+  /// Crea otra tarea con el estado cambiado, sin modificar la original.
+  Task copyWith({bool? isCompleted}) {
+    return Task(
+      id: id,
+      title: title,
+      description: description,
+      priority: priority,
+      isCompleted: isCompleted ?? this.isCompleted,
+      userId: userId,
+    );
+  }
+
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
       id: json['id'] as int,

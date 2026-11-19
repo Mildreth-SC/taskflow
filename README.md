@@ -190,3 +190,58 @@ El detalle muestra prioridad, estado y `Usuario: 1`, que viene del campo `userId
 ![Detalle de Crear el proyecto TaskFlow con Usuario: 1](docs/evidencias/sesion-05-detalle.png)
 
 ![Detalle de Personalizar la bienvenida en Android Studio con Usuario: 1](docs/evidencias/sesion-05-detalle-android-studio.png)
+
+## Sesión 6 · Arquitectura MVVM con Provider
+
+TaskFlow se reorganizó por funcionalidades. La lista y el detalle ya no leen una lista global: comparten un único `TasksViewModel` que entrega `ChangeNotifierProvider`, y el ViewModel pide los datos a un `TaskRepository`.
+
+```
+lib/
+  main.dart
+  app/taskflow_app.dart
+  core/app_theme.dart
+  features/tasks/
+    domain/task.dart
+    data/task_repository.dart
+    data/local_task_repository.dart
+    presentation/tasks_view_model.dart
+    presentation/task_list_screen.dart
+    presentation/task_detail_screen.dart
+```
+
+- **Model:** `Task` (`domain/task.dart`) conserva sus seis campos y `fromJson`, y añade `copyWith(isCompleted:)`.
+- **Repository:** `TaskRepository` es el contrato (`getTasks`, `save`). `LocalTaskRepository` lo implementa en memoria con las cinco tareas propias de la sesión 5 (ids 1 a 5).
+- **ViewModel:** `TasksViewModel` (`ChangeNotifier`) expone `tasks`, `findTask(id)` y `toggleCompleted(id)`, que guarda en el repositorio y llama a `notifyListeners()`.
+- **View:** `TaskListScreen` y `TaskDetailScreen` leen el ViewModel con `context.watch`. El botón del detalle usa `context.read` para llamar a `toggleCompleted`.
+- **Provider:** `main.dart` crea el repositorio, lo inyecta al ViewModel y envuelve `TaskFlowApp` con `ChangeNotifierProvider`.
+- `core/app_theme.dart` conserva la paleta propia (semilla `#1F6F5B`) y `app/taskflow_app.dart` las rutas `/` y `/task/:id`.
+
+Recorrido del dato: `onPressed` → `toggleCompleted` → `save` → `notifyListeners` → `build`. Los datos siguen en memoria: al reiniciar la app vuelven a su valor inicial. Todavía no hay solicitudes de red ni API.
+
+Dependencia nueva: `provider`, agregada con `flutter pub add provider`.
+
+Comprobaciones: `dart format lib`, `flutter analyze` sin errores y `flutter test` con 7 pruebas (modelo, `copyWith`, repositorio, ViewModel, cambio de estado entre detalle y lista, navegación e id inexistente).
+
+## Evidencias de la sesión 6
+
+Capturas del emulador Android (Pixel 10, API 37, `emulator-5554`) tomadas el 19 de noviembre de 2026 con `adb exec-out screencap`, con la app en ejecución.
+
+### Lista inicial con cinco tareas propias
+
+![Lista inicial: dos tareas completadas y tres pendientes](docs/evidencias/sesion-06-listado-inicial.png)
+
+### Detalle antes de cambiar el estado
+
+![Detalle de Probar el panel de tareas: Estado pendiente y botón Marcar como completada](docs/evidencias/sesion-06-detalle-pendiente.png)
+
+### Detalle después de cambiar el estado
+
+El texto pasa a `Estado: completada`, cambian el icono de la acción contextual y el botón (`Marcar como pendiente`).
+
+![Detalle de Probar el panel de tareas: Estado completada y botón Marcar como pendiente](docs/evidencias/sesion-06-detalle-completada.png)
+
+### Lista actualizada
+
+Al volver, la tarjeta de la tarea muestra el icono de completada: lista y detalle comparten el mismo ViewModel.
+
+![Lista actualizada: tres tareas completadas](docs/evidencias/sesion-06-listado-actualizado.png)

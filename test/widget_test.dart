@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:taskflow/main.dart';
-import 'package:taskflow/task.dart';
+import 'package:provider/provider.dart';
+import 'package:taskflow/app/taskflow_app.dart';
+import 'package:taskflow/features/tasks/data/local_task_repository.dart';
+import 'package:taskflow/features/tasks/domain/task.dart';
+import 'package:taskflow/features/tasks/presentation/tasks_view_model.dart';
 
 void main() {
+  setUp(() => appRouter.go('/'));
+
   test('Task.fromJson convierte el JSON de la API', () {
     final task = Task.fromJson(const {
       'id': 7,
@@ -20,9 +25,109 @@ void main() {
     expect(task.userId, 1);
   });
 
-  test('findTask devuelve null si el id no existe', () {
-    expect(findTask(99), isNull);
-    expect(findTask(1)?.title, 'Crear el proyecto TaskFlow');
+  test('copyWith cambia el estado sin modificar la tarea original', () {
+    const original = Task(
+      id: 1,
+      title: 'A',
+      description: 'B',
+      priority: 'Baja',
+      isCompleted: false,
+      userId: 1,
+    );
+    final changed = original.copyWith(isCompleted: true);
+    expect(changed.isCompleted, isTrue);
+    expect(original.isCompleted, isFalse);
+    expect(changed.id, original.id);
+    expect(changed.title, original.title);
+    expect(original.copyWith().isCompleted, isFalse);
+  });
+
+  test('LocalTaskRepository conserva las cinco tareas propias', () {
+    final repository = LocalTaskRepository();
+    final tasks = repository.getTasks();
+    expect(tasks, hasLength(5));
+    expect(tasks.map((task) => task.id).toSet(), {1, 2, 3, 4, 5});
+    expect(tasks.first.title, 'Crear el proyecto TaskFlow');
+    expect(() => tasks.add(tasks.first), throwsUnsupportedError);
+
+    repository.save(tasks[2].copyWith(isCompleted: true));
+    expect(repository.getTasks()[2].isCompleted, isTrue);
+    repository.save(
+      const Task(
+        id: 99,
+        title: 'x',
+        description: 'x',
+        priority: 'Alta',
+        isCompleted: false,
+        userId: 1,
+      ),
+    );
+    expect(repository.getTasks(), hasLength(5));
+  });
+
+  test('TasksViewModel busca por id y avisa al cambiar el estado', () {
+    final viewModel = TasksViewModel(LocalTaskRepository());
+    var avisos = 0;
+    viewModel.addListener(() => avisos++);
+
+    expect(viewModel.findTask(99), isNull);
+    expect(viewModel.findTask(null), isNull);
+    expect(viewModel.findTask(3)?.isCompleted, isFalse);
+
+    viewModel.toggleCompleted(3);
+    expect(viewModel.findTask(3)?.isCompleted, isTrue);
+    expect(avisos, 1);
+
+    viewModel.toggleCompleted(3);
+    expect(viewModel.findTask(3)?.isCompleted, isFalse);
+    expect(avisos, 2);
+
+    viewModel.toggleCompleted(99);
+    expect(avisos, 2);
+  });
+
+  testWidgets('marcar una tarea actualiza el detalle y la lista', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => TasksViewModel(LocalTaskRepository()),
+        child: const TaskFlowApp(),
+      ),
+    );
+
+    expect(find.byIcon(Icons.check_circle), findsNWidgets(2));
+
+    await openTask(tester, 'Probar el panel de tareas');
+    expect(routeOf(tester), '/task/3');
+    expect(find.text('Estado: pendiente'), findsOneWidget);
+    expect(find.text('Marcar como completada'), findsOneWidget);
+
+    await tester.tap(find.text('Marcar como completada'));
+    await tester.pumpAndSettle();
+    expect(find.text('Estado: completada'), findsOneWidget);
+    expect(find.text('Marcar como pendiente'), findsOneWidget);
+    expect(
+      find.text('Acción contextual: esta tarea ya está completada.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Volver al listado'));
+    await tester.pumpAndSettle();
+    expect(find.text('Mis tareas'), findsOneWidget);
+    expect(find.byIcon(Icons.check_circle), findsNWidgets(3));
+
+    await openTask(tester, 'Probar el panel de tareas');
+    expect(find.text('Estado: completada'), findsOneWidget);
+
+    await tester.tap(find.text('Marcar como pendiente'));
+    await tester.pumpAndSettle();
+    expect(find.text('Estado: pendiente'), findsOneWidget);
   });
 
   testWidgets('cada tarjeta abre su detalle y se puede volver', (tester) async {
@@ -31,7 +136,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const TaskFlowApp());
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => TasksViewModel(LocalTaskRepository()),
+        child: const TaskFlowApp(),
+      ),
+    );
 
     await openTask(tester, 'Crear el proyecto TaskFlow');
     expect(find.text('Detalle de tarea'), findsOneWidget);
@@ -41,38 +151,33 @@ void main() {
     );
     expect(find.text('Prioridad: Alta'), findsOneWidget);
     expect(find.text('Estado: completada'), findsOneWidget);
-    expect(
-      find.text('Acción contextual: esta tarea ya está completada.'),
-      findsOneWidget,
-    );
     expect(find.text('Usuario: 1'), findsOneWidget);
     expect(routeOf(tester), '/task/1');
 
     await tester.tap(find.text('Volver al listado'));
     await tester.pumpAndSettle();
     expect(find.text('Mis tareas'), findsOneWidget);
-    expect(find.text('Crear el proyecto TaskFlow'), findsOneWidget);
     expect(routeOf(tester), '/');
 
-    await openTask(tester, 'Probar el panel de tareas');
-    expect(find.text('Estado: pendiente'), findsOneWidget);
-    expect(
-      find.text('Acción contextual: esta tarea sigue pendiente.'),
-      findsOneWidget,
-    );
-    expect(routeOf(tester), '/task/3');
+    await openTask(tester, 'Preparar el detalle');
+    expect(find.text('Prioridad: Baja'), findsOneWidget);
+    expect(routeOf(tester), '/task/5');
     expect(find.byType(BackButton), findsOneWidget);
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     expect(find.text('Mis tareas'), findsOneWidget);
+  });
 
-    await openTask(tester, 'Preparar el detalle');
-    expect(find.text('Prioridad: Baja'), findsOneWidget);
-    expect(
-      find.text('Dejar lista la acción para abrir una tarea'),
-      findsOneWidget,
+  testWidgets('un id inexistente muestra un mensaje', (tester) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => TasksViewModel(LocalTaskRepository()),
+        child: const TaskFlowApp(),
+      ),
     );
-    expect(routeOf(tester), '/task/5');
+    appRouter.go('/task/99');
+    await tester.pumpAndSettle();
+    expect(find.text('No se encontró esta tarea.'), findsOneWidget);
   });
 }
 
