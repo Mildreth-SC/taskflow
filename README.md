@@ -245,3 +245,62 @@ El texto pasa a `Estado: completada`, cambian el icono de la acción contextual 
 Al volver, la tarjeta de la tarea muestra el icono de completada: lista y detalle comparten el mismo ViewModel.
 
 ![Lista actualizada: tres tareas completadas](docs/evidencias/sesion-06-listado-actualizado.png)
+
+## Sesión 7 · Consultar tareas desde API
+
+TaskFlow ya no usa la lista local al iniciar: consulta una API REST por HTTPS con Dio. La arquitectura MVVM de la sesión 6 se conserva y solo cambia la fuente de datos en `main.dart`.
+
+```
+lib/features/tasks/
+  data/task_api_service.dart        ← nuevo: conoce la URL y hace GET con Dio
+  data/remote_task_repository.dart  ← nuevo: pide al Service y guarda copia en memoria
+  data/task_repository.dart         ← contrato asíncrono: Future<List<Task>> getTasks()
+  data/local_task_repository.dart   ← conserva las cinco tareas propias (respaldo)
+  presentation/tasks_view_model.dart← loadTasks(), isLoading y errorMessage
+```
+
+Recorrido del dato: `main.dart` construye `RemoteTaskRepository(TaskApiService())` → `TasksViewModel.loadTasks()` → `getTasks()` del Repository → `TaskApiService.getTasks()` → Dio hace `GET` → `Task.fromJson()` crea cada tarea → `notifyListeners()` redibuja la lista → la ruta `/task/:id` abre el detalle.
+
+### API de tareas
+
+- **API:** JSONPlaceholder, API pública de datos de prueba.
+- **URL exacta:** `https://jsonplaceholder.typicode.com/todos?userId=2`
+- **URL base en Dio:** `https://jsonplaceholder.typicode.com`, con `connectTimeout` y `receiveTimeout` de 10 s.
+- **Parámetro `userId`:** el codelab usa `1`; en el trabajo autónomo se cambió la constante `TaskApiService.userId` a **2**. La API devuelve 20 tareas de ese usuario (ids 21 a 40).
+- **Campos que llegan:** `userId`, `id`, `title` y `completed` (`completed` se lee como `isCompleted`).
+- **Valores que completa TaskFlow por defecto:** la API no envía `description` ni `priority`, así que `Task.fromJson` usa `Sin descripción (API)` y `Sin prioridad (API)`. No vienen del servidor.
+- **Marcar una tarea sigue siendo local:** `toggleCompleted` cambia la copia en memoria del Repository. JSONPlaceholder no guarda cambios; al reiniciar la app la tarea vuelve a su valor remoto. El CRUD remoto llega en la sesión 10.
+- **Permiso Android:** `android.permission.INTERNET` en `android/app/src/main/AndroidManifest.xml`.
+- **Dependencia nueva:** `dio`, agregada con `flutter pub add dio`.
+
+Si la red falla, la lista muestra `No se pudieron cargar las tareas.` y la consola registra el error. La sesión 8 agregará estados más completos y el botón Reintentar.
+
+Comprobaciones: `dart format lib test`, `flutter analyze` sin problemas y `flutter test` con 10 pruebas (JSON local y de JSONPlaceholder, `copyWith`, repositorio local asíncrono, carga del ViewModel, error de carga, lista con error, cambio de estado, navegación e id inexistente). Las pruebas no llaman a internet.
+
+## Evidencias de la sesión 7
+
+Capturas del emulador Android (Pixel 10, `emulator-5554`) tomadas el 21 de noviembre de 2026 con `adb shell screencap`, con la app en ejecución (`flutter run`).
+
+### Listado remoto del usuario 2
+
+![Listado con las tareas remotas de JSONPlaceholder del usuario 2](docs/evidencias/sesion-07-listado-remoto.png)
+
+### Detalle de una tarea remota
+
+Muestra los valores por defecto de descripción y prioridad, y `Usuario: 2`.
+
+![Detalle de la tarea 21 con Usuario 2](docs/evidencias/sesion-07-detalle-remoto.png)
+
+### Error sin conexión
+
+En el primer arranque el emulador estaba en modo avión: la consulta falló y la lista mostró el mensaje de error.
+
+![Lista con el mensaje No se pudieron cargar las tareas](docs/evidencias/sesion-07-error-sin-red.png)
+
+### Consola
+
+Salida real de `flutter run` y `flutter analyze`: [sesion-07-consola.txt](docs/evidencias/sesion-07-consola.txt)
+
+```
+I/flutter (15268): GET /todos?userId=2 → HTTP 200
+```

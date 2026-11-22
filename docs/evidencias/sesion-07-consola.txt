@@ -1,0 +1,19 @@
+TaskFlow - Sesion 7 - salida real de consola (21/11/2026, emulador Pixel 10, emulator-5554)
+
+# 1) flutter run con el emulador en modo avion
+Launching lib\main.dart on sdk gphone16k x86 64 in debug mode...
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+I/flutter (12816): Error al cargar tareas: DioException [connection error]: The connection errored: Failed host lookup: 'jsonplaceholder.typicode.com' This indicates an error which most likely cannot be solved by the library.
+I/flutter (12816): Error: SocketException: Failed host lookup: 'jsonplaceholder.typicode.com' (OS Error: No address associated with hostname, errno = 7)
+
+# 2) flutter run con internet
+Launching lib\main.dart on sdk gphone16k x86 64 in debug mode...
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+I/flutter (15268): GET /todos?userId=2 → HTTP 200
+
+# 3) flutter analyze
+Analyzing taskflow...                                           
+No issues found! (ran in 41.8s)
+
+# 4) flutter test (ultima linea)
+00:05 +10: All tests passed!
