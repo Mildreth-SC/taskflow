@@ -17,6 +17,31 @@ class FailingTaskRepository implements TaskRepository {
   void save(Task task) {}
 }
 
+/// Respuesta válida sin tareas (como userId=9999 en la API).
+class EmptyTaskRepository implements TaskRepository {
+  @override
+  Future<List<Task>> getTasks() async => [];
+
+  @override
+  void save(Task task) {}
+}
+
+/// Falla en el primer intento y responde en los siguientes, como cuando
+/// el emulador vuelve a tener internet.
+class FlakyTaskRepository implements TaskRepository {
+  int calls = 0;
+
+  @override
+  Future<List<Task>> getTasks() async {
+    calls++;
+    if (calls == 1) throw Exception('sin conexión');
+    return LocalTaskRepository().getTasks();
+  }
+
+  @override
+  void save(Task task) {}
+}
+
 Widget buildApp(TaskRepository repository) {
   return ChangeNotifierProvider(
     create: (_) => TasksViewModel(repository)..loadTasks(),
@@ -111,6 +136,38 @@ void main() {
     expect(viewModel.isLoading, isFalse);
     expect(viewModel.errorMessage, 'No se pudieron cargar las tareas.');
     expect(viewModel.tasks, isEmpty);
+  });
+
+  test('TasksViewModel distingue vacío de error', () async {
+    final empty = TasksViewModel(EmptyTaskRepository());
+    await empty.loadTasks();
+    expect(empty.isEmpty, isTrue);
+    expect(empty.errorMessage, isNull);
+
+    final failing = TasksViewModel(FailingTaskRepository());
+    await failing.loadTasks();
+    expect(failing.isEmpty, isFalse);
+    expect(failing.errorMessage, isNotNull);
+  });
+
+  test('TasksViewModel reintenta y recupera la lista', () async {
+    final repository = FlakyTaskRepository();
+    final viewModel = TasksViewModel(repository);
+    await viewModel.loadTasks();
+    expect(viewModel.errorMessage, isNotNull);
+    await viewModel.loadTasks();
+    expect(viewModel.errorMessage, isNull);
+    expect(viewModel.tasks, hasLength(5));
+    expect(repository.calls, 2);
+  });
+
+  test('TasksViewModel no repite una carga en curso', () async {
+    final repository = FlakyTaskRepository()..calls = 1;
+    final viewModel = TasksViewModel(repository);
+    final first = viewModel.loadTasks();
+    final second = viewModel.loadTasks();
+    await Future.wait([first, second]);
+    expect(repository.calls, 2);
   });
 
   testWidgets('la lista muestra el error si la API no responde', (
