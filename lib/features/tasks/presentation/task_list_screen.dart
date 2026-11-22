@@ -107,8 +107,16 @@ class TaskListScreen extends StatelessWidget {
         onPressed: () async {
           final draft = await context.push<TaskDraft>('/new');
           if (!context.mounted || draft == null) return;
+          final date = draft.dueDate == null
+              ? 'sin fecha límite'
+              : 'para el ${formatDate(draft.dueDate!)}';
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Formulario válido: ${draft.title}')),
+            SnackBar(
+              content: Text(
+                'Tarea lista: ${draft.title} · ${draft.priority} · $date. '
+                'Se enviará a la API en la sesión 10.',
+              ),
+            ),
           );
         },
         icon: const Icon(Icons.add),
@@ -154,7 +162,7 @@ class TaskListScreen extends StatelessWidget {
       onRefresh: () => context.read<TasksViewModel>().loadTasks(),
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
         itemCount: viewModel.tasks.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {

@@ -356,3 +356,53 @@ Emulador Android Pixel 10 (`emulator-5554`), 21 de noviembre de 2026, capturas c
 ![Estado vacío con botón Actualizar](docs/evidencias/sesion-08-vacio.png)
 
 Salida real de consola: [sesion-08-consola.txt](docs/evidencias/sesion-08-consola.txt)
+
+## Sesión 9 · Formulario de tareas
+
+TaskFlow tiene la pantalla **Nueva tarea** en la ruta `/new`. Se abre con el botón flotante de la lista, valida los datos antes de guardar y devuelve un borrador (`TaskDraft`) a la lista con `context.pop(draft)`. **Todavía no se envía nada a la API:** el mensaje de retorno lo aclara y la sesión 10 conectará Guardar con `POST`.
+
+```
+lib/features/tasks/presentation/
+  task_form_screen.dart   ← nuevo: TaskDraft, TaskFormValidators y TaskFormScreen
+  task_list_screen.dart   ← botón flotante "Nueva tarea" y SnackBar de retorno
+lib/app/taskflow_app.dart ← nueva ruta /new (se conservan / y /task/:id)
+```
+
+- **Form + GlobalKey<FormState>:** `validate()` revisa todos los campos juntos al tocar Guardar.
+- **TextEditingController:** lee título y descripción; se liberan en `dispose()`.
+- **Validaciones propias (`TaskFormValidators`):**
+  - Título obligatorio: `Ponle un nombre a tu tarea.`; menos de 3 caracteres: `El título es muy corto: usa al menos 3 caracteres.`; más de 60: `Resume el título en 60 caracteres o menos.`
+  - Descripción opcional, hasta 200 caracteres.
+  - Prioridad obligatoria (Alta, Media o Baja): `Elige una prioridad: Alta, Media o Baja.`
+- **Fecha límite opcional** con `showDatePicker`: se puede guardar sin elegirla y se puede quitar con la ✕. Se muestra como dd/mm/aaaa sin paquetes extra.
+- Después del primer intento fallido el formulario se revalida mientras se escribe, así el error desaparece al corregirlo.
+- **Guardar** con datos válidos vuelve a la lista y muestra: `Tarea lista: <título> · <prioridad> · para el dd/mm/aaaa. Se enviará a la API en la sesión 10.`
+- **Cancelar** (o la flecha atrás) vuelve sin mensaje. El detalle de cada tarea sigue abriendo.
+
+Comprobaciones: `dart format lib test`, `flutter analyze` sin problemas y `flutter test` con 19 pruebas. Las nuevas cubren las reglas de validación, el formulario con errores que no regresa, el formulario válido que vuelve con mensaje y Cancelar sin mensaje.
+
+Nota: el selector de fecha aparece en inglés porque la app aún no carga traducciones de Material (`flutter_localizations`); se puede agregar más adelante.
+
+## Evidencias de la sesión 9
+
+Emulador Android Pixel 10 (`emulator-5554`), 21 de noviembre de 2026, capturas con `adb shell screencap` y la app en ejecución.
+
+### Errores de validación (Guardar con el formulario vacío)
+
+![Formulario con los errores de título y prioridad](docs/evidencias/sesion-09-errores.png)
+
+### Título demasiado corto
+
+![Error de título con solo dos caracteres](docs/evidencias/sesion-09-titulo-corto.png)
+
+### Formulario válido con fecha opcional
+
+![Formulario con título, descripción, prioridad Alta y fecha 28/11/2026](docs/evidencias/sesion-09-formulario-valido.png)
+
+### Mensaje al volver a la lista
+
+![SnackBar Tarea lista con el título, la prioridad y la fecha](docs/evidencias/sesion-09-mensaje-retorno.png)
+
+### Botón Nueva tarea y Cancelar sin mensaje
+
+![Lista con el botón flotante Nueva tarea y sin SnackBar después de Cancelar](docs/evidencias/sesion-09-cancelar-sin-mensaje.png)

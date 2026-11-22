@@ -6,6 +6,7 @@ import 'package:taskflow/app/taskflow_app.dart';
 import 'package:taskflow/features/tasks/data/local_task_repository.dart';
 import 'package:taskflow/features/tasks/data/task_repository.dart';
 import 'package:taskflow/features/tasks/domain/task.dart';
+import 'package:taskflow/features/tasks/presentation/task_form_screen.dart';
 import 'package:taskflow/features/tasks/presentation/tasks_view_model.dart';
 
 /// Repositorio que siempre falla, para probar el mensaje de error sin red.
@@ -206,21 +207,87 @@ void main() {
     );
   });
 
-  testWidgets('el formulario valida título vacío y corto', (tester) async {
+  test('TaskFormValidators: título, descripción y prioridad', () {
+    expect(TaskFormValidators.title(''), 'Ponle un nombre a tu tarea.');
+    expect(TaskFormValidators.title('  '), 'Ponle un nombre a tu tarea.');
+    expect(
+      TaskFormValidators.title('ab'),
+      'El título es muy corto: usa al menos 3 caracteres.',
+    );
+    expect(TaskFormValidators.title('Leer capítulo 3'), isNull);
+    expect(TaskFormValidators.title('x' * 61), isNotNull);
+    expect(TaskFormValidators.description(''), isNull);
+    expect(TaskFormValidators.description('x' * 201), isNotNull);
+    expect(TaskFormValidators.priority(null), isNotNull);
+    expect(TaskFormValidators.priority('Urgente'), isNotNull);
+    expect(TaskFormValidators.priority('Alta'), isNull);
+    expect(formatDate(DateTime(2026, 12, 5)), '05/12/2026');
+  });
+
+  testWidgets('el formulario muestra errores y no regresa', (tester) async {
     await tester.pumpWidget(buildApp(LocalTaskRepository()));
     await tester.pumpAndSettle();
-    appRouter.push('/new');
+    await tester.tap(find.text('Nueva tarea'));
     await tester.pumpAndSettle();
-    expect(find.text('Nueva tarea'), findsOneWidget);
+    expect(routeOf(tester), '/new');
 
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
-    expect(find.text('Escribe un título.'), findsOneWidget);
+    expect(find.text('Ponle un nombre a tu tarea.'), findsOneWidget);
+    expect(
+      find.text('Elige una prioridad: Alta, Media o Baja.'),
+      findsOneWidget,
+    );
+    expect(routeOf(tester), '/new');
 
-    await tester.enterText(find.byType(TextFormField).first, 'ab');
+    await tester.enterText(find.byKey(const Key('titleField')), 'ab');
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
-    expect(find.text('Usa al menos 3 caracteres.'), findsOneWidget);
+    expect(
+      find.text('El título es muy corto: usa al menos 3 caracteres.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('un formulario válido vuelve a la lista con un mensaje', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(LocalTaskRepository()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nueva tarea'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('titleField')),
+      'Estudiar para el parcial',
+    );
+    await tester.tap(find.byKey(const Key('priorityField')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Alta').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Sin fecha límite (opcional)'), findsOneWidget);
+
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    expect(routeOf(tester), '/');
+    expect(
+      find.text(
+        'Tarea lista: Estudiar para el parcial · Alta · sin fecha límite. '
+        'Se enviará a la API en la sesión 10.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Cancelar regresa sin mensaje', (tester) async {
+    await tester.pumpWidget(buildApp(LocalTaskRepository()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nueva tarea'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(routeOf(tester), '/');
+    expect(find.byType(SnackBar), findsNothing);
   });
 
   testWidgets('marcar una tarea actualiza el detalle y la lista', (
