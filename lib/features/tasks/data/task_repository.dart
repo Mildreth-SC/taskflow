@@ -1,8 +1,8 @@
 import '../domain/task.dart';
 
-/// Contrato de acceso a tareas. Hoy se implementa con datos locales; al
-/// conectar la API, las operaciones pasarán a ser asíncronas.
+/// Contrato de acceso a tareas. getTasks es asíncrono porque la fuente
+/// principal ahora es una API REST.
 abstract class TaskRepository {
-  List<Task> getTasks();
+  Future<List<Task>> getTasks();
   void save(Task task);
 }

@@ -11,7 +11,7 @@ void main() {
   final TaskRepository repository = LocalTaskRepository();
   runApp(
     ChangeNotifierProvider(
-      create: (_) => TasksViewModel(repository),
+      create: (_) => TasksViewModel(repository)..loadTasks(),
       child: const TaskFlowApp(),
     ),
   );
