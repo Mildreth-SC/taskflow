@@ -178,6 +178,34 @@ void main() {
     expect(find.text('No se pudieron cargar las tareas.'), findsOneWidget);
   });
 
+  testWidgets('la lista vacía ofrece Actualizar, no Reintentar', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(EmptyTaskRepository()));
+    await tester.pumpAndSettle();
+    expect(find.text('Todavía no hay tareas para mostrar.'), findsOneWidget);
+    expect(find.text('Actualizar'), findsOneWidget);
+    expect(find.text('Reintentar'), findsNothing);
+  });
+
+  testWidgets('Reintentar recupera la lista sin reiniciar la app', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(FlakyTaskRepository()));
+    await tester.pumpAndSettle();
+    expect(find.text('Reintentar'), findsOneWidget);
+    expect(find.text('Actualizar'), findsNothing);
+
+    await tester.tap(find.text('Reintentar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Reintentar'), findsNothing);
+    expect(find.text('Crear el proyecto TaskFlow'), findsOneWidget);
+    expect(
+      find.text('5 tareas · desliza hacia abajo para actualizar'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('marcar una tarea actualiza el detalle y la lista', (
     tester,
   ) async {

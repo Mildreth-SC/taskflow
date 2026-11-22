@@ -28,6 +28,57 @@ class TaskCard extends StatelessWidget {
   }
 }
 
+/// Mensaje centrado con icono y una acción: lo usan los estados de
+/// error y vacío para que se vean igual en TaskFlow.
+class TaskStateMessage extends StatelessWidget {
+  const TaskStateMessage({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.actionLabel,
+    required this.actionIcon,
+    required this.onAction,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+  final String actionLabel;
+  final IconData actionIcon;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 64, color: theme.colorScheme.primary),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: onAction,
+              icon: Icon(actionIcon),
+              label: Text(actionLabel),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// La vista solo lee el estado del ViewModel y llama a sus acciones.
 /// No conoce Dio ni hace solicitudes HTTP.
 class TaskListScreen extends StatelessWidget {
@@ -56,36 +107,35 @@ class TaskListScreen extends StatelessWidget {
 
   Widget _buildBody(BuildContext context, TasksViewModel viewModel) {
     if (viewModel.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (viewModel.errorMessage != null) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(viewModel.errorMessage!),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () => context.read<TasksViewModel>().loadTasks(),
-              child: const Text('Reintentar'),
-            ),
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Cargando tus tareas…'),
           ],
         ),
       );
     }
+    if (viewModel.errorMessage != null) {
+      return TaskStateMessage(
+        icon: Icons.cloud_off,
+        title: viewModel.errorMessage!,
+        message: 'Revisa tu conexión a internet y vuelve a intentarlo.',
+        actionLabel: 'Reintentar',
+        actionIcon: Icons.replay,
+        onAction: () => context.read<TasksViewModel>().loadTasks(),
+      );
+    }
     if (viewModel.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Todavía no hay tareas para mostrar.'),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () => context.read<TasksViewModel>().loadTasks(),
-              child: const Text('Actualizar'),
-            ),
-          ],
-        ),
+      return TaskStateMessage(
+        icon: Icons.inbox_outlined,
+        title: 'Todavía no hay tareas para mostrar.',
+        message: 'La API respondió bien, pero este usuario no tiene tareas.',
+        actionLabel: 'Actualizar',
+        actionIcon: Icons.refresh,
+        onAction: () => context.read<TasksViewModel>().loadTasks(),
       );
     }
     return RefreshIndicator(
@@ -93,9 +143,19 @@ class TaskListScreen extends StatelessWidget {
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
-        itemCount: viewModel.tasks.length,
+        itemCount: viewModel.tasks.length + 1,
         itemBuilder: (context, index) {
-          final task = viewModel.tasks[index];
+          if (index == 0) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                '${viewModel.tasks.length} tareas · desliza hacia abajo '
+                'para actualizar',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            );
+          }
+          final task = viewModel.tasks[index - 1];
           return TaskCard(
             task: task,
             onTap: () => context.push('/task/${task.id}'),

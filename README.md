@@ -304,3 +304,55 @@ Salida real de `flutter run` y `flutter analyze`: [sesion-07-consola.txt](docs/e
 ```
 I/flutter (15268): GET /todos?userId=2 → HTTP 200
 ```
+
+## Sesión 8 · Estados de carga, lista, vacío y error
+
+La lista remota ahora distingue cuatro situaciones y permite repetir la consulta sin reiniciar TaskFlow. Solo cambiaron el ViewModel y la lista: el modelo, el Service, el Repository, las rutas y el detalle siguen igual. Ningún widget hace solicitudes HTTP: la vista lee el estado con `context.watch` y llama a `loadTasks()` con `context.read`.
+
+| Estado | Cuándo ocurre | Qué muestra TaskFlow | Acción |
+|---|---|---|---|
+| Carga | `isLoading` es verdadero mientras espera la red | Indicador y `Cargando tus tareas…`; el botón de la barra se desactiva | Ninguna (no se repite la solicitud) |
+| Lista | La API respondió con tareas | Contador de tareas y una tarjeta por `Task` | Tocar una tarjeta, botón Actualizar de la barra o deslizar hacia abajo |
+| Vacío | La API respondió bien con `[]` | Icono de bandeja y `Todavía no hay tareas para mostrar.` | **Actualizar** |
+| Error | Falló la red, el servidor o el formato | Icono de nube tachada, `No se pudieron cargar las tareas.` y una pista | **Reintentar** |
+
+- `TasksViewModel.isEmpty` es verdadero solo si no hay carga, no hay error y la lista está vacía: **vacío no es error**.
+- `loadTasks()` sale de inmediato si ya hay una carga en curso (`if (isLoading) return;`), limpia `errorMessage` antes de cada intento y, si falla, deja la lista vacía y el detalle técnico en la consola.
+- `TaskStateMessage` es un widget reutilizable para los estados de error y vacío (icono, título, explicación y botón).
+- Actualizar vuelve a leer el servidor; por eso una marca local de completada se pierde, como en la sesión 7.
+
+Comprobaciones: `dart format lib test`, `flutter analyze` sin problemas y `flutter test` con 15 pruebas. Las nuevas usan repositorios falsos sin internet: vacío frente a error, Reintentar recupera la lista, no se repite una carga en curso, la lista vacía ofrece Actualizar y no Reintentar, y Reintentar en pantalla recupera las tareas.
+
+### Cómo se provocó cada estado
+
+Emulador Android Pixel 10 (`emulator-5554`), 21 de noviembre de 2026, capturas con `adb shell screencap`:
+
+1. **Lista:** `userId = 2` con internet. La consola muestra `GET /todos?userId=2 → HTTP 200` y aparecen 20 tareas.
+2. **Carga:** se limitó la red del emulador (`adb emu network speed gsm` y `adb emu network delay gprs`) y se tocó Actualizar. No se agregó ninguna espera artificial al código. Después se restauró la red (`speed full`, `delay none`).
+3. **Error:** se activó el modo avión del emulador (`adb shell cmd connectivity airplane-mode enable`) y se tocó Actualizar. La consola registra `Failed host lookup`.
+4. **Reintentar:** se desactivó el modo avión y se tocó **Reintentar** en la misma ejecución, sin reiniciar la app: volvió la lista con `HTTP 200`.
+5. **Vacío:** se cambió temporalmente `TaskApiService.userId` a `9999` y se reinició la app. La API respondió `HTTP 200` con una lista vacía. Después se restauró `userId = 2`, que es el valor que queda en el código.
+
+## Evidencias de la sesión 8
+
+### Lista con tareas remotas
+
+![Lista con 20 tareas del usuario 2](docs/evidencias/sesion-08-lista.png)
+
+### Carga con red limitada
+
+![Indicador de carga con el texto Cargando tus tareas](docs/evidencias/sesion-08-carga.png)
+
+### Error sin conexión
+
+![Error con icono de nube, mensaje y botón Reintentar](docs/evidencias/sesion-08-error.png)
+
+### Reintentar recupera la lista sin reiniciar
+
+![Lista recuperada después de tocar Reintentar](docs/evidencias/sesion-08-reintentar-recupera.png)
+
+### Respuesta vacía (userId 9999)
+
+![Estado vacío con botón Actualizar](docs/evidencias/sesion-08-vacio.png)
+
+Salida real de consola: [sesion-08-consola.txt](docs/evidencias/sesion-08-consola.txt)

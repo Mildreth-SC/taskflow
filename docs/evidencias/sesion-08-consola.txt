@@ -1,0 +1,20 @@
+TaskFlow - Sesion 8 - salida real de consola (21/11/2026, emulador Pixel 10, emulator-5554)
+(Las notas despues de "<-" son anotaciones agregadas para explicar cada linea; no forman parte de la salida.)
+
+# 1) flutter run con userId = 9999 (respuesta vacia)
+I/flutter (22682): GET /todos?userId=9999 → HTTP 200
+
+# 2) flutter run con userId = 2 (misma ejecucion para lista, carga, error y reintento)
+I/flutter (23585): GET /todos?userId=2 → HTTP 200          <- arranque: lista
+I/flutter (23585): GET /todos?userId=2 → HTTP 200          <- Actualizar con red limitada: carga
+I/flutter (23585): Error al cargar tareas: DioException [connection error]: The connection errored: Failed host lookup: 'jsonplaceholder.typicode.com' This indicates an error which most likely cannot be solved by the library.   <- modo avion: error
+I/flutter (23585): GET /todos?userId=2 → HTTP 200          <- Reintentar sin reiniciar: lista recuperada
+I/flutter (23585): GET /todos?userId=2 → HTTP 200          <- nueva captura de carga
+I/flutter (23585): GET /todos?userId=2 → HTTP 200          <- nueva captura de carga
+
+# 3) flutter analyze
+Analyzing taskflow...                                           
+No issues found! (ran in 15.9s)
+
+# 4) flutter test (ultima linea)
+00:02 +15: All tests passed!
