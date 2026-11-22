@@ -206,6 +206,23 @@ void main() {
     );
   });
 
+  testWidgets('el formulario valida título vacío y corto', (tester) async {
+    await tester.pumpWidget(buildApp(LocalTaskRepository()));
+    await tester.pumpAndSettle();
+    appRouter.push('/new');
+    await tester.pumpAndSettle();
+    expect(find.text('Nueva tarea'), findsOneWidget);
+
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Escribe un título.'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField).first, 'ab');
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Usa al menos 3 caracteres.'), findsOneWidget);
+  });
+
   testWidgets('marcar una tarea actualiza el detalle y la lista', (
     tester,
   ) async {
