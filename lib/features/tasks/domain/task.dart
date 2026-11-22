@@ -28,13 +28,16 @@ class Task {
     );
   }
 
+  /// Acepta el formato local (isCompleted) y el de JSONPlaceholder
+  /// (completed). La API no envía descripción ni prioridad, así que
+  /// TaskFlow completa esos campos con valores explícitos.
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
       id: json['id'] as int,
       title: json['title'] as String,
-      description: json['description'] as String,
-      priority: json['priority'] as String,
-      isCompleted: json['isCompleted'] as bool,
+      description: json['description'] as String? ?? 'Sin descripción (API)',
+      priority: json['priority'] as String? ?? 'Sin prioridad (API)',
+      isCompleted: (json['isCompleted'] ?? json['completed']) as bool,
       userId: json['userId'] as int,
     );
   }
