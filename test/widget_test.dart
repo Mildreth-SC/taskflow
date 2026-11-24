@@ -16,6 +16,16 @@ class FailingTaskRepository implements TaskRepository {
 
   @override
   void save(Task task) {}
+
+  @override
+  Future<Task> createTask(String title, String description, String priority) =>
+      throw Exception('sin conexión');
+
+  @override
+  Future<void> updateTask(Task task) async => throw Exception('sin conexión');
+
+  @override
+  Future<void> deleteTask(int id) async => throw Exception('sin conexión');
 }
 
 /// Respuesta válida sin tareas (como userId=9999 en la API).
@@ -25,6 +35,16 @@ class EmptyTaskRepository implements TaskRepository {
 
   @override
   void save(Task task) {}
+
+  @override
+  Future<Task> createTask(String title, String description, String priority) =>
+      throw Exception('sin conexión');
+
+  @override
+  Future<void> updateTask(Task task) async => throw Exception('sin conexión');
+
+  @override
+  Future<void> deleteTask(int id) async => throw Exception('sin conexión');
 }
 
 /// Falla en el primer intento y responde en los siguientes, como cuando
@@ -41,6 +61,16 @@ class FlakyTaskRepository implements TaskRepository {
 
   @override
   void save(Task task) {}
+
+  @override
+  Future<Task> createTask(String title, String description, String priority) =>
+      throw Exception('sin conexión');
+
+  @override
+  Future<void> updateTask(Task task) async => throw Exception('sin conexión');
+
+  @override
+  Future<void> deleteTask(int id) async => throw Exception('sin conexión');
 }
 
 Widget buildApp(TaskRepository repository) {
@@ -137,6 +167,63 @@ void main() {
     expect(viewModel.isLoading, isFalse);
     expect(viewModel.errorMessage, 'No se pudieron cargar las tareas.');
     expect(viewModel.tasks, isEmpty);
+  });
+
+  test('LocalTaskRepository crea, actualiza y elimina', () async {
+    final repository = LocalTaskRepository();
+    final created = await repository.createTask('Nueva', 'Desc', 'Alta');
+    expect(created.id, 6);
+    expect(await repository.getTasks(), hasLength(6));
+    await repository.updateTask(created.copyWith(title: 'Editada'));
+    expect((await repository.getTasks()).last.title, 'Editada');
+    await repository.deleteTask(6);
+    expect(await repository.getTasks(), hasLength(5));
+  });
+
+  test('copyWith y toJson para PATCH', () {
+    const task = Task(
+      id: 21,
+      title: 'Original',
+      description: 'D',
+      priority: 'Alta',
+      isCompleted: false,
+      userId: 2,
+    );
+    final edited = task.copyWith(title: 'Editada');
+    expect(edited.title, 'Editada');
+    expect(task.title, 'Original');
+    expect(edited.toJson(), {
+      'title': 'Editada',
+      'completed': false,
+      'userId': 2,
+    });
+  });
+
+  test('TasksViewModel crea, edita y elimina tras confirmar', () async {
+    final viewModel = TasksViewModel(LocalTaskRepository());
+    await viewModel.loadTasks();
+    await viewModel.createTask('Preparar CRUD', 'POST', 'Media');
+    expect(viewModel.tasks, hasLength(6));
+    expect(viewModel.findTask(6)?.priority, 'Media');
+
+    await viewModel.updateTask(viewModel.findTask(6)!.copyWith(title: 'CRUD'));
+    expect(viewModel.findTask(6)?.title, 'CRUD');
+
+    await viewModel.deleteTask(6);
+    expect(viewModel.findTask(6), isNull);
+    expect(viewModel.tasks, hasLength(5));
+  });
+
+  test('TasksViewModel no cambia la lista si la API falla', () async {
+    final repository = FlakyTaskRepository();
+    final viewModel = TasksViewModel(repository);
+    await viewModel.loadTasks();
+    await viewModel.loadTasks();
+    expect(viewModel.tasks, hasLength(5));
+    final failing = TasksViewModel(FailingTaskRepository());
+    await expectLater(failing.createTask('x', 'y', 'Alta'), throwsException);
+    await expectLater(failing.deleteTask(1), throwsException);
+    expect(failing.tasks, isEmpty);
   });
 
   test('TasksViewModel distingue vacío de error', () async {

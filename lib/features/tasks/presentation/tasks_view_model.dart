@@ -55,4 +55,32 @@ class TasksViewModel extends ChangeNotifier {
     ];
     notifyListeners();
   }
+
+  /// Solo agrega la tarea cuando el Repository confirma el POST.
+  Future<void> createTask(
+    String title,
+    String description,
+    String priority,
+  ) async {
+    final created = await _repository.createTask(title, description, priority);
+    _tasks = [..._tasks, created];
+    notifyListeners();
+  }
+
+  /// PATCH: actualiza la vista solo después de una respuesta correcta.
+  Future<void> updateTask(Task task) async {
+    await _repository.updateTask(task);
+    _tasks = [
+      for (final item in _tasks)
+        if (item.id == task.id) task else item,
+    ];
+    notifyListeners();
+  }
+
+  /// DELETE: quita la tarea de la lista solo si la API respondió bien.
+  Future<void> deleteTask(int id) async {
+    await _repository.deleteTask(id);
+    _tasks = _tasks.where((task) => task.id != id).toList();
+    notifyListeners();
+  }
 }
