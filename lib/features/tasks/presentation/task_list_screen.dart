@@ -20,13 +20,18 @@ class TaskCard extends StatelessWidget {
     return Card(
       child: ListTile(
         onTap: onTap,
+        // El estado no depende solo del color: icono distinto y etiqueta
+        // para el lector de pantalla.
         leading: Icon(
           task.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-          color: task.isCompleted ? Colors.green : null,
+          color: task.isCompleted ? Colors.green.shade700 : null,
+          semanticLabel: task.isCompleted ? 'Completada' : 'Pendiente',
         ),
         title: Text(task.title),
         subtitle: Text('Prioridad: ${task.priority}'),
         trailing: const Icon(Icons.chevron_right),
+        // Altura mínima de 48 dp aunque el título sea corto.
+        minTileHeight: 56,
       ),
     );
   }
