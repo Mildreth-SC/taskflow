@@ -1,0 +1,77 @@
+00:00 +0: loading C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart
+00:00 +0: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: lista vacía después de cargar cero tareas
+00:00 +1: C:/Users/guano/Desktop/taskflow/test/task_failure_test.dart: sin conexión pide revisar internet
+00:00 +2: C:/Users/guano/Desktop/taskflow/test/task_failure_test.dart: sin conexión pide revisar internet
+00:00 +2: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: un TaskFailure llega como mensaje y Reintentar recupera
+Error al cargar tareas (network): Revisa tu conexión a internet.
+00:00 +3: C:/Users/guano/Desktop/taskflow/test/task_failure_test.dart: sin conexión pide revisar internet
+00:00 +4: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: un error desconocido muestra un mensaje genérico
+Error inesperado: Bad state: detalle técnico
+00:00 +5: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: un error desconocido muestra un mensaje genérico
+00:00 +6: C:/Users/guano/Desktop/taskflow/test/task_failure_test.dart: una respuesta 4xx o 5xx muestra el código HTTP
+00:00 +7: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: crear, editar y eliminar cambian la lista tras confirmar
+00:00 +8: C:/Users/guano/Desktop/taskflow/test/task_failure_test.dart: toString no expone detalles técnicos
+00:00 +9: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: si la escritura falla la lista no cambia y isSaving se libera
+00:00 +10: C:/Users/guano/Desktop/taskflow/test/task_failure_test.dart: RemoteTaskRepository entrega TaskFailure, no DioException
+GET /todos falló: connectionError (HTTP -)
+POST /todos falló: connectionError (HTTP -)
+DELETE /todos/1 falló: badResponse (HTTP 404)
+GET /todos devolvió datos inesperados: sin lista
+00:00 +11: C:/Users/guano/Desktop/taskflow/test/task_model_test.dart: Task.fromJson convierte completed y completa campos ausentes
+00:00 +12: C:/Users/guano/Desktop/taskflow/test/task_model_test.dart: Task.fromJson acepta el formato local con isCompleted, descripción y prioridad
+00:00 +13: C:/Users/guano/Desktop/taskflow/test/task_model_test.dart: Task.fromJson un JSON sin título falla en lugar de crear una tarea vacía
+00:00 +14: C:/Users/guano/Desktop/taskflow/test/task_model_test.dart: toJson y copyWith conservan los datos y no cambian el original
+00:01 +15: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +16: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +17: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +18: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +19: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +20: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +20: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: TasksViewModel expone un mensaje cuando la carga falla
+Error al cargar tareas (network): Revisa tu conexión a internet.
+00:01 +21: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +22: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +23: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +24: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +24: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: TasksViewModel no cambia la lista si la API falla
+Error al cargar tareas (network): Revisa tu conexión a internet.
+00:01 +25: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +25: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: TasksViewModel distingue vacío de error
+Error al cargar tareas (network): Revisa tu conexión a internet.
+00:01 +26: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +26: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: TasksViewModel reintenta y recupera la lista
+Error al cargar tareas (network): Revisa tu conexión a internet.
+00:01 +27: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:01 +28: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:03 +28: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: la lista muestra el error si la API no responde
+Error al cargar tareas (network): Revisa tu conexión a internet.
+00:03 +29: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:03 +30: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:03 +31: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: Reintentar recupera la lista sin reiniciar la app
+00:03 +32: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: Reintentar recupera la lista sin reiniciar la app
+00:04 +32: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: lista muestra el error y Reintentar vuelve a cargar
+Error al cargar tareas (server): La API respondió con HTTP 500: el servidor tuvo un problema.
+00:04 +33: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: Reintentar recupera la lista sin reiniciar la app
+Error al cargar tareas (network): Revisa tu conexión a internet.
+00:04 +34: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: lista muestra estado vacío
+00:04 +35: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: lista muestra estado vacío
+00:04 +36: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: el formulario muestra errores y no regresa
+00:05 +37: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: un formulario válido vuelve a la lista con un mensaje
+00:05 +38: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: Cancelar regresa sin mensaje
+00:06 +39: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: crear desde el formulario agrega la tarea a la lista
+00:06 +40: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: editar el título desde el detalle
+00:07 +41: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: eliminar pide confirmación y vuelve a la lista
+00:07 +42: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: un error al eliminar no anuncia éxito
+00:08 +43: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: TasksViewModel ignora un segundo envío mientras guarda
+00:08 +44: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: Guardar se deshabilita mientras se envía el POST
+00:08 +45: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: si el POST falla el formulario sigue abierto con sus datos
+00:09 +46: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: cada tipo de error tiene su propio mensaje y Reintentar
+Error al cargar tareas (timeout): El servidor tardó demasiado. Inténtalo de nuevo en unos segundos.
+Error al cargar tareas (server): La API respondió con HTTP 404: no se encontró la ruta solicitada.
+Error al cargar tareas (network): Revisa tu conexión a internet.
+00:09 +47: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: un error desconocido no muestra detalles técnicos
+Error inesperado: Bad state: null check
+00:09 +48: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: marcar una tarea actualiza el detalle y la lista
+00:10 +49: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: cada tarjeta abre su detalle y se puede volver
+00:10 +50: C:/Users/guano/Desktop/taskflow/test/widget_test.dart: un id inexistente muestra un mensaje
+00:11 +51: All tests passed!

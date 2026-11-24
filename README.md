@@ -540,3 +540,37 @@ Emulador Android Pixel 10 (`emulator-5554`), 24 de noviembre de 2026, capturas c
 ![Formulario abierto con No se pudo crear la tarea. Revisa tu conexión a internet.](docs/evidencias/sesion-11-05-error-al-guardar.png)
 
 ![Tarea creada al tocar Guardar otra vez con la red restaurada](docs/evidencias/sesion-11-06-reintento-guardado.png)
+
+## Sesión 12 · Pruebas del flujo esencial
+
+Las pruebas comprueban riesgos concretos de TaskFlow **sin depender de internet**: ninguna usa `RemoteTaskRepository` con Dio real. Para eso se creó `test/fake_task_repository.dart`, un Repository en memoria que implementa el mismo contrato y permite provocar éxito, lista vacía, error (`loadError`, `writeError`) o una carga que espera (`gate`).
+
+| Archivo | Riesgo que cubre | Pruebas |
+|---|---|---|
+| `test/task_model_test.dart` | El JSON de JSONPlaceholder (`completed`, sin descripción ni prioridad) se convierte bien al modelo de seis campos; un JSON sin título falla; `toJson`/`copyWith` no cambian el original | 4 |
+| `test/tasks_view_model_test.dart` | Estados del ViewModel con el fake: vacío, carga (`isLoading`), `TaskFailure` con mensaje y recuperación, error desconocido sin detalles técnicos, crear/editar/eliminar y fallo de escritura que libera `isSaving` | 6 |
+| `test/task_widgets_test.dart` | Formulario: Guardar no acepta título vacío ni corto y no envía nada. Lista: indicador de carga, error con Reintentar que recupera, estado vacío | 4 |
+
+Las cuatro pruebas pedidas en el codelab están dentro de esos archivos: conversión JSON, estado del ViewModel, validación del formulario y carga/error en la lista. Se conservan además las pruebas de sesiones anteriores (`test/widget_test.dart` y `test/task_failure_test.dart`), que ya eran de TaskFlow.
+
+```
+flutter test --reporter expanded test/task_model_test.dart test/tasks_view_model_test.dart test/task_widgets_test.dart
+flutter test
+```
+
+Comprobaciones: `dart format lib test` y `flutter analyze` sin problemas; 14 pruebas esenciales y 51 en total, todas pasando. Las líneas `Error al cargar tareas…` de la salida son el `debugPrint` del ViewModel durante las pruebas de error, no fallos.
+
+## Evidencias de la sesión 12
+
+Salidas reales de `flutter test` en el PC, 24 de noviembre de 2026, guardadas tal cual en el momento de ejecutarlas:
+
+- [`docs/evidencias/sesion-12-flutter-test-esenciales.txt`](docs/evidencias/sesion-12-flutter-test-esenciales.txt) — las 14 pruebas nuevas con `--reporter expanded`.
+- [`docs/evidencias/sesion-12-flutter-test-completo.txt`](docs/evidencias/sesion-12-flutter-test-completo.txt) — las 51 pruebas del proyecto.
+
+Las imágenes reproducen esas salidas (solo se abrevió la ruta `C:/Users/guano/Desktop/taskflow/test/` y se partieron las líneas largas).
+
+![Salida de flutter test con las 14 pruebas esenciales pasando](docs/evidencias/sesion-12-flutter-test.png)
+
+![Final de flutter test con 51 pruebas pasando](docs/evidencias/sesion-12-flutter-test-completo.png)
+
+Nota sobre la sesión 11: en `docs/evidencias/sesion-11-consola.txt` se marcaron como **(reconstruido)** las líneas de los bloques 1 a 3, que se transcribieron de la pantalla porque el log de esa corrida no se guardó a tiempo.

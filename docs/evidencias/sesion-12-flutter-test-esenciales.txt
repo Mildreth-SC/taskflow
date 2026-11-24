@@ -1,0 +1,19 @@
+00:00 +0: loading C:/Users/guano/Desktop/taskflow/test/task_model_test.dart
+00:00 +0: C:/Users/guano/Desktop/taskflow/test/task_model_test.dart: Task.fromJson convierte completed y completa campos ausentes
+00:00 +1: C:/Users/guano/Desktop/taskflow/test/task_model_test.dart: Task.fromJson acepta el formato local con isCompleted, descripción y prioridad
+00:00 +2: C:/Users/guano/Desktop/taskflow/test/task_model_test.dart: Task.fromJson un JSON sin título falla en lugar de crear una tarea vacía
+00:00 +3: C:/Users/guano/Desktop/taskflow/test/task_model_test.dart: toJson y copyWith conservan los datos y no cambian el original
+00:00 +4: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: lista vacía después de cargar cero tareas
+00:00 +5: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: carga las tareas del Repository y pasa por isLoading
+00:00 +6: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: un TaskFailure llega como mensaje y Reintentar recupera
+Error al cargar tareas (network): Revisa tu conexión a internet.
+00:00 +7: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: un error desconocido muestra un mensaje genérico
+Error inesperado: Bad state: detalle técnico
+00:00 +8: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: crear, editar y eliminar cambian la lista tras confirmar
+00:00 +9: C:/Users/guano/Desktop/taskflow/test/tasks_view_model_test.dart: si la escritura falla la lista no cambia y isSaving se libera
+00:01 +10: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: formulario Guardar no acepta un título vacío ni corto
+00:03 +11: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: lista muestra la carga mientras el Repository responde
+00:03 +12: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: lista muestra el error y Reintentar vuelve a cargar
+Error al cargar tareas (server): La API respondió con HTTP 500: el servidor tuvo un problema.
+00:03 +13: C:/Users/guano/Desktop/taskflow/test/task_widgets_test.dart: lista muestra estado vacío
+00:03 +14: All tests passed!
