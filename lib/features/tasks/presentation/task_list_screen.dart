@@ -212,6 +212,12 @@ class TaskListScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Nombre recordado en Configuración (preferencia local).
+                  Text(
+                    'Hola, ${settings.name}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
                   // El filtro elegido se guarda y se recupera al reabrir.
                   SegmentedButton<TaskFilter>(
                     showSelectedIcon: false,

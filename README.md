@@ -574,3 +574,65 @@ Las imágenes reproducen esas salidas (solo se abrevió la ruta `C:/Users/guano/
 ![Final de flutter test con 51 pruebas pasando](docs/evidencias/sesion-12-flutter-test-completo.png)
 
 Nota sobre la sesión 11: en `docs/evidencias/sesion-11-consola.txt` se marcaron como **(reconstruido)** las líneas de los bloques 1 a 3, que se transcribieron de la pantalla porque el log de esa corrida no se guardó a tiempo.
+
+## Sesión 13 · Preferencias locales del usuario
+
+TaskFlow recuerda tres preferencias pequeñas al cerrar y volver a abrir la app: el **nombre mostrado**, el **tema** (Sistema, Claro u Oscuro) y el **último filtro** de la lista (Todas, Pendientes o Completadas). Se guardan con `shared_preferences` (`SharedPreferencesAsync`).
+
+> **Importante: no es una sesión autenticada.** JSONPlaceholder no pide usuario ni contraseña, así que TaskFlow no inventa un token ni guarda credenciales. El nombre es solo una preferencia local de este dispositivo: no se envía a la API y cualquiera que use el teléfono puede cambiarlo. Si una API real pidiera token, se guardaría en almacenamiento seguro (`flutter_secure_storage`), nunca en preferencias simples.
+
+```
+lib/core/user_preferences.dart     ← nuevo: KeyValueStore, SharedPreferencesStore, TaskFilter y UserPreferences
+lib/core/settings_view_model.dart  ← nuevo: nombre, tema y filtro para toda la app (ChangeNotifier)
+lib/core/settings_screen.dart      ← nuevo: pantalla Configuración (/settings)
+lib/core/app_theme.dart            ← tema oscuro con la misma semilla
+lib/app/taskflow_app.dart          ← ruta /settings y themeMode desde SettingsViewModel
+lib/main.dart                      ← lee las preferencias antes de runApp y usa MultiProvider
+lib/features/tasks/presentation/task_list_screen.dart ← botón Configuración, saludo y filtro recordado
+```
+
+| Clave | Valor | Valor inicial |
+|---|---|---|
+| `user_name` | Texto sin espacios al inicio o al final | `Estudiante` |
+| `theme_mode` | `system`, `light` o `dark` | `system` |
+| `task_filter` | `all`, `pending` o `completed` | `all` |
+
+- Un nombre vacío no se guarda: Configuración muestra `Escribe un nombre para mostrar.`
+- Un valor desconocido o vacío vuelve al valor inicial.
+- `mounted` se comprueba después de cada `await` en la pantalla de configuración.
+- Las pruebas usan `MemoryStore` (un mapa) en lugar del almacenamiento del teléfono; dos `UserPreferences` con el mismo `MemoryStore` simulan cerrar y volver a abrir.
+- Hot Reload no prueba la persistencia: la evidencia se tomó cerrando la app por completo.
+
+Comprobaciones: `dart format lib test`, `flutter analyze` sin problemas y `flutter test` con 61 pruebas (valores iniciales, guardar y recuperar al "reabrir", valores inválidos, pantalla de configuración, cambio de tema, filtro aplicado al abrir y saludo con el nombre guardado).
+
+## Evidencias de la sesión 13
+
+Emulador Android Pixel 10 (`emulator-5554`), 24 de noviembre de 2026. Se borraron los datos de la app (`adb shell pm clear com.example.taskflow`), se eligieron las preferencias, se cerró la app por completo con `adb shell am force-stop com.example.taskflow` y se abrió otra vez desde el lanzador. El log muestra un proceso distinto antes (31134) y después (2554) del cierre. Consola y contenido guardado: [`docs/evidencias/sesion-13-consola.txt`](docs/evidencias/sesion-13-consola.txt).
+
+### Antes: valores iniciales
+
+![Lista con Hola, Estudiante y filtro Todas](docs/evidencias/sesion-13-01-lista-inicial.png)
+
+![Configuración con el nombre inicial Estudiante y tema Sistema](docs/evidencias/sesion-13-02-configuracion-inicial.png)
+
+### Guardar nombre y tema
+
+![SnackBar Nombre guardado: Mildreth](docs/evidencias/sesion-13-03-nombre-guardado.png)
+
+![Tema Claro elegido](docs/evidencias/sesion-13-04-tema-claro.png)
+
+![Lista antes de cerrar: Hola, Mildreth, tema claro y filtro Pendientes](docs/evidencias/sesion-13-05-lista-antes-de-cerrar.png)
+
+### Después de cerrar y volver a abrir la app
+
+![Lista tras reiniciar con Hola, Mildreth, tema claro y Pendientes](docs/evidencias/sesion-13-06-lista-tras-reiniciar.png)
+
+![Configuración tras reiniciar con Mildreth y tema Claro](docs/evidencias/sesion-13-07-configuracion-tras-reiniciar.png)
+
+Contenido del archivo de preferencias antes de cerrar (bytes no imprimibles como `.`):
+
+```
+....user_name..*.Mildreth....theme_mode..*.light....task_filter..*.pending
+```
+
+El emulador ya estaba en modo oscuro, por eso la opción **Sistema** se ve oscura y se eligió **Claro** para que el cambio de tema se note en las capturas.

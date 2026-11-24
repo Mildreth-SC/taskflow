@@ -78,4 +78,13 @@ void main() {
       2,
     );
   });
+
+  testWidgets('la lista saluda con el nombre guardado', (tester) async {
+    await pumpList(tester, MemoryStore());
+    expect(find.text('Hola, Estudiante'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+    await pumpList(tester, MemoryStore({'user_name': 'Mildreth'}));
+    expect(find.text('Hola, Mildreth'), findsOneWidget);
+  });
 }

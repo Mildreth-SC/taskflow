@@ -1,0 +1,29 @@
+Sesión 13 · Evidencia de consola guardada en el momento (adb logcat -d -s flutter).
+Las horas de logcat están en UTC (el emulador usa UTC): 17:17 UTC = 12:17 hora de Colombia.
+
+1) Primer arranque con datos borrados (adb shell pm clear com.example.taskflow). La primera carga agotó el tiempo; se restableció la red del emulador y se tocó Reintentar.
+--------- beginning of main
+11-24 17:17:48.519 31134 31187 I flutter : [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+11-24 17:17:48.802 31134 31193 I flutter : The Dart VM service is listening on http://127.0.0.1:38895/oBsebNVIJ0E=/
+11-24 17:18:04.476 31134 31134 I flutter : GET /todos falló: connectionTimeout (HTTP -)
+11-24 17:18:04.484 31134 31134 I flutter : Error al cargar tareas (timeout): El servidor tardó demasiado. Inténtalo de nuevo en unos segundos.
+11-24 17:19:15.957 31134 31134 I flutter : GET /todos?userId=2 → HTTP 200
+
+2) Antes de cerrar (mismo proceso 31134): nombre Mildreth, tema Claro y filtro Pendientes elegidos en la app.
+--------- beginning of main
+11-24 17:17:48.519 31134 31187 I flutter : [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+11-24 17:17:48.802 31134 31193 I flutter : The Dart VM service is listening on http://127.0.0.1:38895/oBsebNVIJ0E=/
+11-24 17:18:04.476 31134 31134 I flutter : GET /todos falló: connectionTimeout (HTTP -)
+11-24 17:18:04.484 31134 31134 I flutter : Error al cargar tareas (timeout): El servidor tardó demasiado. Inténtalo de nuevo en unos segundos.
+11-24 17:19:15.957 31134 31134 I flutter : GET /todos?userId=2 → HTTP 200
+
+3) Contenido guardado por shared_preferences (DataStore de Android) antes de cerrar.
+adb exec-out run-as com.example.taskflow cat files/datastore/FlutterSharedPreferences.preferences_pb
+(bytes no imprimibles mostrados como .)
+....user_name..*.Mildreth....theme_mode..*.light....task_filter..*.pending
+
+4) Después de cerrar por completo (adb shell am force-stop) y abrir otra vez (proceso nuevo 2554).
+--------- beginning of main
+11-24 17:22:13.838  2554  2605 I flutter : [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+11-24 17:22:14.193  2554  2613 I flutter : The Dart VM service is listening on http://127.0.0.1:34425/FTo3eb0D7hQ=/
+11-24 17:22:23.091  2554  2554 I flutter : GET /todos?userId=2 → HTTP 200
