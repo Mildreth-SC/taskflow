@@ -100,15 +100,6 @@ class TaskStateMessage extends StatelessWidget {
   };
 }
 
-/// true si la tarea se ve con el filtro elegido.
-bool matchesFilter(TaskFilter filter, Task task) {
-  return switch (filter) {
-    TaskFilter.all => true,
-    TaskFilter.pending => !task.isCompleted,
-    TaskFilter.completed => task.isCompleted,
-  };
-}
-
 /// La vista solo lee el estado del ViewModel y llama a sus acciones.
 /// No conoce Dio ni hace solicitudes HTTP.
 class TaskListScreen extends StatelessWidget {

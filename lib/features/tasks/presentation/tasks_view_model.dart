@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../core/task_failure.dart';
+import '../../../core/user_preferences.dart';
 import '../data/task_repository.dart';
 import '../domain/task.dart';
 
@@ -19,6 +20,53 @@ class TasksViewModel extends ChangeNotifier {
   bool isSaving = false;
 
   List<Task> get tasks => List.unmodifiable(_tasks);
+
+  /// Texto de búsqueda por título. Solo cambia qué se muestra: la lista
+  /// original (_tasks) no se toca ni se vuelve a pedir a la API.
+  String query = '';
+
+  /// Prioridad elegida; null muestra todas.
+  String? priority;
+
+  static const priorityOptions = [
+    'Alta',
+    'Media',
+    'Baja',
+    'Sin prioridad (API)',
+  ];
+
+  /// Lista derivada: búsqueda + estado (filtro guardado en la sesión 13)
+  /// + prioridad.
+  List<Task> visibleTasks(TaskFilter state) {
+    return _tasks
+        .where(
+          (task) =>
+              matchesFilter(state, task) &&
+              matchesQuery(query, task) &&
+              (priority == null || task.priority == priority),
+        )
+        .toList();
+  }
+
+  bool hasFilters(TaskFilter state) =>
+      query.trim().isNotEmpty || priority != null || state != TaskFilter.all;
+
+  void setQuery(String value) {
+    query = value;
+    notifyListeners();
+  }
+
+  void setPriority(String? value) {
+    priority = value;
+    notifyListeners();
+  }
+
+  /// Limpia búsqueda y prioridad. El estado lo limpia SettingsViewModel.
+  void clearFilters() {
+    query = '';
+    priority = null;
+    notifyListeners();
+  }
 
   /// Vacío es una respuesta válida sin tareas; no es lo mismo que error.
   bool get isEmpty => !isLoading && errorMessage == null && _tasks.isEmpty;
@@ -123,4 +171,32 @@ String saveErrorText(String action, Object error) {
       ? error.message
       : 'Ocurrió un problema inesperado.';
   return 'No se pudo $action. $reason';
+}
+
+/// true si la tarea se ve con el filtro de estado elegido.
+bool matchesFilter(TaskFilter filter, Task task) {
+  return switch (filter) {
+    TaskFilter.all => true,
+    TaskFilter.pending => !task.isCompleted,
+    TaskFilter.completed => task.isCompleted,
+  };
+}
+
+/// Búsqueda por título sin distinguir mayúsculas ni tildes.
+bool matchesQuery(String query, Task task) {
+  final text = foldText(query.trim());
+  return text.isEmpty || foldText(task.title).contains(text);
+}
+
+/// Minúsculas y sin tildes: "Título" y "titulo" coinciden.
+String foldText(String value) {
+  const from = 'áéíóúüñ';
+  const to = 'aeiouun';
+  final lower = value.toLowerCase();
+  final buffer = StringBuffer();
+  for (final char in lower.split('')) {
+    final index = from.indexOf(char);
+    buffer.write(index == -1 ? char : to[index]);
+  }
+  return buffer.toString();
 }
