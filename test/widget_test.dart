@@ -112,6 +112,26 @@ class SlowCreateRepository extends LocalTaskRepository {
   }
 }
 
+/// Falla una vez con el error indicado y luego responde normal.
+class FailOnceRepository extends LocalTaskRepository {
+  FailOnceRepository(this.failure);
+
+  final TaskFailure failure;
+  int calls = 0;
+
+  @override
+  Future<List<Task>> getTasks() async {
+    calls++;
+    if (calls == 1) throw failure;
+    return super.getTasks();
+  }
+}
+
+class _BrokenRepository extends LocalTaskRepository {
+  @override
+  Future<List<Task>> getTasks() async => throw StateError('null check');
+}
+
 Widget buildApp(TaskRepository repository) {
   return ChangeNotifierProvider(
     create: (_) => TasksViewModel(repository)..loadTasks(),
@@ -607,6 +627,51 @@ void main() {
     );
     expect(find.text('Sin red'), findsOneWidget);
     expect(find.text('Guardar'), findsOneWidget);
+  });
+
+  testWidgets('cada tipo de error tiene su propio mensaje y Reintentar', (
+    tester,
+  ) async {
+    final cases = {
+      const TaskFailure(
+        'El servidor tardó demasiado. Inténtalo de nuevo en unos segundos.',
+        kind: TaskFailureKind.timeout,
+      ): 'El servidor no respondió a tiempo',
+      TaskFailure(
+        TaskFailure.httpMessage(404),
+        kind: TaskFailureKind.server,
+        statusCode: 404,
+      ): 'La API respondió con error',
+      offline: 'Sin conexión',
+    };
+    for (final entry in cases.entries) {
+      appRouter.go('/');
+      final repository = FailOnceRepository(entry.key);
+      await tester.pumpWidget(buildApp(repository));
+      await tester.pumpAndSettle();
+      expect(find.text(entry.value), findsOneWidget);
+      expect(find.text(entry.key.message), findsOneWidget);
+
+      await tester.tap(find.text('Reintentar'));
+      await tester.pumpAndSettle();
+      expect(find.text(entry.value), findsNothing);
+      expect(
+        find.text('5 tareas · desliza hacia abajo para actualizar'),
+        findsOneWidget,
+      );
+      await tester.pumpWidget(const SizedBox());
+    }
+  });
+
+  test('un error desconocido no muestra detalles técnicos', () async {
+    final viewModel = TasksViewModel(_BrokenRepository());
+    await viewModel.loadTasks();
+    expect(viewModel.errorMessage, 'Ocurrió un problema inesperado.');
+    expect(viewModel.errorKind, TaskFailureKind.unexpected);
+    expect(
+      saveErrorText('crear la tarea', StateError('x')),
+      'No se pudo crear la tarea. Ocurrió un problema inesperado.',
+    );
   });
 
   testWidgets('marcar una tarea actualiza el detalle y la lista', (

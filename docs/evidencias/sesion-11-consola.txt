@@ -1,0 +1,24 @@
+Sesión 11 · flutter run -d emulator-5554 (Pixel_10, API JSONPlaceholder)
+
+1) Sin conexión (modo avión) y Reintentar
+I/flutter ( 5967): GET /todos?userId=2 → HTTP 200
+I/flutter ( 5967): GET /todos falló: connectionError (HTTP -)
+I/flutter ( 5967): Error al cargar tareas (network): Revisa tu conexión a internet.
+I/flutter ( 5967): GET /todos?userId=2 → HTTP 200
+
+2) Guardar con red lenta (tres toques en Guardar → un solo POST)
+I/flutter ( 5967): POST /todos → HTTP 201
+
+3) Guardar sin internet y reintentar con red
+I/flutter ( 5967): POST /todos falló: connectionError (HTTP -)
+I/flutter ( 5967): POST /todos → HTTP 201
+
+4) Ruta temporal /ruta-inexistente (no se versiona)
+I/flutter (11083): GET /todos falló: badResponse (HTTP 404)
+I/flutter (11083): Error al cargar tareas (server): La API respondió con HTTP 404: no se encontró la ruta solicitada.
+
+5) Latencia de 15 s (adb emu network delay 15000:15000) y Reintentar sin latencia
+I/flutter (12299): GET /todos?userId=2 → HTTP 200
+I/flutter (12299): GET /todos falló: connectionTimeout (HTTP -)
+I/flutter (12299): Error al cargar tareas (timeout): El servidor tardó demasiado. Inténtalo de nuevo en unos segundos.
+I/flutter (12299): GET /todos?userId=2 → HTTP 200

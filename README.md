@@ -478,3 +478,65 @@ PATCH /todos/201 → HTTP 200   (editar título)
 PATCH /todos/201 → HTTP 200   (marcar como completada)
 DELETE /todos/201 → HTTP 200
 ```
+
+## Sesión 11 · Manejo de errores y recuperación
+
+TaskFlow explica qué falló y deja recuperarse sin reiniciar la app. Los errores técnicos de Dio se traducen en el **Repository** a una excepción propia, `TaskFailure` (`lib/core/task_failure.dart`); la vista solo muestra su mensaje y el detalle técnico queda en la consola.
+
+```
+lib/core/task_failure.dart              ← nuevo: TaskFailure y TaskFailureKind
+lib/features/tasks/data/remote_task_repository.dart ← traduce DioException y FormatException
+lib/features/tasks/presentation/tasks_view_model.dart ← on TaskFailure, isSaving, saveErrorText
+lib/features/tasks/presentation/task_list_screen.dart ← icono y título según el tipo de error
+lib/features/tasks/presentation/task_form_screen.dart ← el formulario hace el POST y deshabilita Guardar
+lib/features/tasks/presentation/task_detail_screen.dart ← acciones deshabilitadas mientras se envía
+```
+
+| Situación | Tipo | Mensaje en pantalla |
+|---|---|---|
+| Sin internet (modo avión) | `network` | **Sin conexión** · Revisa tu conexión a internet. |
+| Espera mayor a 10 s (`connectTimeout`, `sendTimeout`, `receiveTimeout`) | `timeout` | **El servidor no respondió a tiempo** · El servidor tardó demasiado. Inténtalo de nuevo en unos segundos. |
+| Respuesta 4xx / 5xx | `server` | **La API respondió con error** · La API respondió con HTTP 404: no se encontró la ruta solicitada. (5xx: el servidor tuvo un problema; otro 4xx: la solicitud no es válida) |
+| JSON con otra forma | `data` | La API devolvió datos inesperados. |
+| Cualquier otro error | `unexpected` | Ocurrió un problema inesperado. |
+
+- **Reintentar** vuelve a llamar a `loadTasks()`; con la red restaurada la lista aparece sin reiniciar.
+- **Guardar deshabilitado mientras se envía:** el ViewModel tiene `isSaving`. Mientras es `true` el botón muestra *Guardando…*, los campos y Cancelar se bloquean y un segundo toque no envía otro POST (el método devuelve `false`). `isSaving` vuelve a `false` en `finally`, así ninguna pantalla queda en espera permanente.
+- Si el POST falla, **el formulario sigue abierto con los datos** y muestra `No se pudo crear la tarea. <motivo>`; al volver la red basta tocar Guardar otra vez. En el detalle, Marcar, Editar título y Eliminar también se deshabilitan durante la solicitud y muestran el motivo si fallan.
+- No se reintenta un POST automáticamente: repetirlo podría duplicar la tarea.
+
+Comprobaciones: `dart format lib test`, `flutter analyze` sin problemas y `flutter test` con 37 pruebas (traducción de cada `DioException`, Repository que nunca entrega `DioException`, ViewModel con `TaskFailure` y error desconocido, doble envío ignorado, Guardar deshabilitado, formulario abierto tras un fallo y Reintentar después de cada tipo de error).
+
+## Evidencias de la sesión 11
+
+Emulador Android Pixel 10 (`emulator-5554`), 24 de noviembre de 2026, capturas con `adb shell screencap`. Fallos provocados de verdad: modo avión (`adb shell cmd connectivity airplane-mode enable`), ruta temporal `/ruta-inexistente` en el Service (restaurada antes del commit) y latencia de 15 s con `adb emu network delay 15000:15000`. Consola: [`docs/evidencias/sesion-11-consola.txt`](docs/evidencias/sesion-11-consola.txt).
+
+### Error 1: sin conexión
+
+![Sin conexión · Revisa tu conexión a internet, con Reintentar](docs/evidencias/sesion-11-01-error-sin-conexion.png)
+
+### Recuperación con Reintentar
+
+![Lista con 20 tareas después de Reintentar con la red restaurada](docs/evidencias/sesion-11-02-recuperada-reintentar.png)
+
+### Error 2: la API responde HTTP 404
+
+![La API respondió con error · HTTP 404 no se encontró la ruta solicitada](docs/evidencias/sesion-11-07-error-http-404.png)
+
+### Error 3: tiempo de espera agotado y recuperación
+
+![El servidor no respondió a tiempo](docs/evidencias/sesion-11-08-error-tiempo-agotado.png)
+
+![Lista recuperada con Reintentar sin latencia](docs/evidencias/sesion-11-09-recuperada-tras-timeout.png)
+
+### Guardar deshabilitado mientras se envía
+
+![Botón Guardando… deshabilitado con red lenta](docs/evidencias/sesion-11-03-guardando-deshabilitado.png)
+
+![Una sola tarea creada (21 tareas) aunque se tocó Guardar tres veces](docs/evidencias/sesion-11-04-creada-una-vez.png)
+
+### Guardar sin internet y reintentar
+
+![Formulario abierto con No se pudo crear la tarea. Revisa tu conexión a internet.](docs/evidencias/sesion-11-05-error-al-guardar.png)
+
+![Tarea creada al tocar Guardar otra vez con la red restaurada](docs/evidencias/sesion-11-06-reintento-guardado.png)
