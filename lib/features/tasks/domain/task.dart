@@ -16,11 +16,12 @@ class Task {
   final bool isCompleted;
   final int userId;
 
-  /// Crea otra tarea con el estado cambiado, sin modificar la original.
-  Task copyWith({bool? isCompleted}) {
+  /// Crea otra tarea con el título o el estado cambiado, sin modificar
+  /// la original.
+  Task copyWith({String? title, bool? isCompleted}) {
     return Task(
       id: id,
-      title: title,
+      title: title ?? this.title,
       description: description,
       priority: priority,
       isCompleted: isCompleted ?? this.isCompleted,
@@ -40,5 +41,11 @@ class Task {
       isCompleted: (json['isCompleted'] ?? json['completed']) as bool,
       userId: json['userId'] as int,
     );
+  }
+
+  /// Campos que JSONPlaceholder conoce. Descripción y prioridad siguen
+  /// siendo locales porque la API de práctica no los guarda.
+  Map<String, dynamic> toJson() {
+    return {'title': title, 'completed': isCompleted, 'userId': userId};
   }
 }

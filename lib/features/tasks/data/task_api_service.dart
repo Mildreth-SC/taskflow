@@ -35,4 +35,31 @@ class TaskApiService {
       return Task.fromJson(json);
     }).toList();
   }
+
+  /// POST: JSONPlaceholder responde 201 con un id simulado (siempre 201).
+  Future<Task> createTask(String title) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/todos',
+      data: {'title': title, 'completed': false, 'userId': userId},
+    );
+    debugPrint('POST /todos → HTTP ${response.statusCode}');
+    final json = response.data;
+    if (json == null) throw const FormatException('Respuesta vacía.');
+    return Task.fromJson(json);
+  }
+
+  /// PATCH: envía solo los campos que cambian.
+  Future<void> updateTask(Task task) async {
+    final response = await _dio.patch<Map<String, dynamic>>(
+      '/todos/${task.id}',
+      data: {'title': task.title, 'completed': task.isCompleted},
+    );
+    debugPrint('PATCH /todos/${task.id} → HTTP ${response.statusCode}');
+  }
+
+  /// DELETE: la API responde 200 aunque no borra nada de verdad.
+  Future<void> deleteTask(int id) async {
+    final response = await _dio.delete<dynamic>('/todos/$id');
+    debugPrint('DELETE /todos/$id → HTTP ${response.statusCode}');
+  }
 }
