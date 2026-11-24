@@ -73,6 +73,19 @@ class FlakyTaskRepository implements TaskRepository {
   Future<void> deleteTask(int id) async => throw Exception('sin conexión');
 }
 
+/// Lee las tareas locales pero falla al escribir, como una API caída.
+class ReadOnlyTaskRepository extends LocalTaskRepository {
+  @override
+  Future<Task> createTask(String title, String description, String priority) =>
+      throw Exception('sin conexión');
+
+  @override
+  Future<void> updateTask(Task task) async => throw Exception('sin conexión');
+
+  @override
+  Future<void> deleteTask(int id) async => throw Exception('sin conexión');
+}
+
 Widget buildApp(TaskRepository repository) {
   return ChangeNotifierProvider(
     create: (_) => TasksViewModel(repository)..loadTasks(),
@@ -357,7 +370,13 @@ void main() {
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
     expect(routeOf(tester), '/');
-    expect(find.text('Tarea creada'), findsOneWidget);
+    expect(
+      find.text(
+        'Tarea creada: Estudiar para el parcial. '
+        'Aparece al final de la lista.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Cancelar regresa sin mensaje', (tester) async {
@@ -369,6 +388,111 @@ void main() {
     await tester.pumpAndSettle();
     expect(routeOf(tester), '/');
     expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets('crear desde el formulario agrega la tarea a la lista', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(buildApp(LocalTaskRepository()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nueva tarea'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('titleField')), 'Tarea CRUD');
+    await tester.tap(find.byKey(const Key('priorityField')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Baja').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(routeOf(tester), '/');
+    expect(find.textContaining('Tarea creada: Tarea CRUD'), findsOneWidget);
+    expect(
+      find.text('6 tareas · desliza hacia abajo para actualizar'),
+      findsOneWidget,
+    );
+    await tester.scrollUntilVisible(find.text('Tarea CRUD'), 200);
+    expect(find.text('Tarea CRUD'), findsOneWidget);
+  });
+
+  testWidgets('editar el título desde el detalle', (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(buildApp(LocalTaskRepository()));
+    await tester.pumpAndSettle();
+    await openTask(tester, 'Revisar el listado');
+    await tester.tap(find.text('Editar título'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('editTitleField')), 'ab');
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('El título es muy corto: usa al menos 3 caracteres.'),
+      findsOneWidget,
+    );
+    await tester.enterText(
+      find.byKey(const Key('editTitleField')),
+      'Revisar el listado remoto',
+    );
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tarea actualizada'), findsOneWidget);
+    expect(find.text('Revisar el listado remoto'), findsOneWidget);
+  });
+
+  testWidgets('eliminar pide confirmación y vuelve a la lista', (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(buildApp(LocalTaskRepository()));
+    await tester.pumpAndSettle();
+    await openTask(tester, 'Preparar el detalle');
+    await tester.tap(find.text('Eliminar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Eliminar tarea'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(routeOf(tester), '/task/5');
+
+    await tester.tap(find.text('Eliminar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Eliminar'));
+    await tester.pumpAndSettle();
+    expect(routeOf(tester), '/');
+    expect(find.text('Tarea eliminada: Preparar el detalle'), findsOneWidget);
+    expect(
+      find.text('4 tareas · desliza hacia abajo para actualizar'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('un error al eliminar no anuncia éxito', (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(buildApp(ReadOnlyTaskRepository()));
+    await tester.pumpAndSettle();
+    appRouter.push('/task/1');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eliminar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Eliminar'));
+    await tester.pumpAndSettle();
+    expect(find.text('No se pudo eliminar la tarea'), findsOneWidget);
+    expect(find.textContaining('Tarea eliminada'), findsNothing);
+    expect(routeOf(tester), '/task/1');
   });
 
   testWidgets('marcar una tarea actualiza el detalle y la lista', (
@@ -390,6 +514,9 @@ void main() {
     await tester.tap(find.text('Marcar como completada'));
     await tester.pumpAndSettle();
     expect(find.text('Estado: completada'), findsOneWidget);
+    expect(find.text('Tarea marcada como completada'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Volver al listado'));
     await tester.pumpAndSettle();

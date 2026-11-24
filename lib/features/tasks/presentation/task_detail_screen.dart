@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../domain/task.dart';
+import 'task_form_screen.dart';
 import 'tasks_view_model.dart';
 
 class TaskDetailScreen extends StatelessWidget {
@@ -9,12 +11,101 @@ class TaskDetailScreen extends StatelessWidget {
 
   final int? taskId;
 
+  void _show(BuildContext context, String message) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// PATCH del estado: la vista cambia solo si la API respondió bien.
+  Future<void> _toggle(BuildContext context, Task task) async {
+    final completed = !task.isCompleted;
+    try {
+      await context.read<TasksViewModel>().updateTask(
+        task.copyWith(isCompleted: completed),
+      );
+      if (!context.mounted) return;
+      _show(
+        context,
+        completed ? 'Tarea marcada como completada' : 'Tarea marcada pendiente',
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      _show(context, 'No se pudo actualizar el estado');
+    }
+  }
+
+  /// Diálogo de edición con la misma regla del formulario de la sesión 9.
+  Future<void> _editTitle(BuildContext context, Task task) async {
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (_) => _EditTitleDialog(initial: task.title),
+    );
+    if (!context.mounted || newTitle == null || newTitle == task.title) return;
+    try {
+      await context.read<TasksViewModel>().updateTask(
+        task.copyWith(title: newTitle),
+      );
+      if (!context.mounted) return;
+      _show(context, 'Tarea actualizada');
+    } catch (_) {
+      if (!context.mounted) return;
+      _show(context, 'No se pudo actualizar');
+    }
+  }
+
+  /// DELETE solo después de confirmar; vuelve a la lista si salió bien.
+  Future<void> _delete(BuildContext context, Task task) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.delete_outline),
+        title: const Text('Eliminar tarea'),
+        content: Text('¿Eliminar "${task.title}"? Esta acción no se deshace.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await context.read<TasksViewModel>().deleteTask(task.id);
+      if (!context.mounted) return;
+      context.pop();
+      messenger.showSnackBar(
+        SnackBar(content: Text('Tarea eliminada: ${task.title}')),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      _show(context, 'No se pudo eliminar la tarea');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final selected = context.watch<TasksViewModel>().findTask(taskId);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalle de tarea')),
+      appBar: AppBar(
+        title: const Text('Detalle de tarea'),
+        actions: [
+          if (selected != null)
+            IconButton(
+              tooltip: 'Eliminar tarea',
+              onPressed: () => _delete(context, selected),
+              icon: const Icon(Icons.delete_outline),
+            ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: selected == null
@@ -69,17 +160,30 @@ class TaskDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   FilledButton.icon(
-                    onPressed: () {
-                      context.read<TasksViewModel>().toggleCompleted(
-                        selected.id,
-                      );
-                    },
+                    onPressed: () => _toggle(context, selected),
                     icon: Icon(selected.isCompleted ? Icons.undo : Icons.check),
                     label: Text(
                       selected.isCompleted
                           ? 'Marcar como pendiente'
                           : 'Marcar como completada',
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () => _editTitle(context, selected),
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Editar título'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => _delete(context, selected),
+                        icon: const Icon(Icons.delete_outline),
+                        label: const Text('Eliminar'),
+                      ),
+                    ],
                   ),
                   const Spacer(),
                   FilledButton.tonalIcon(
@@ -90,6 +194,56 @@ class TaskDetailScreen extends StatelessWidget {
                 ],
               ),
       ),
+    );
+  }
+}
+
+/// Diálogo con su propio estado para liberar el controlador al cerrarse.
+class _EditTitleDialog extends StatefulWidget {
+  const _EditTitleDialog({required this.initial});
+
+  final String initial;
+
+  @override
+  State<_EditTitleDialog> createState() => _EditTitleDialogState();
+}
+
+class _EditTitleDialogState extends State<_EditTitleDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final _controller = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.pop(context, _controller.text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Editar título'),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          key: const Key('editTitleField'),
+          controller: _controller,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Título'),
+          validator: TaskFormValidators.title,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(onPressed: _save, child: const Text('Guardar')),
+      ],
     );
   }
 }

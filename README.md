@@ -406,3 +406,75 @@ Emulador Android Pixel 10 (`emulator-5554`), 21 de noviembre de 2026, capturas c
 ### Botón Nueva tarea y Cancelar sin mensaje
 
 ![Lista con el botón flotante Nueva tarea y sin SnackBar después de Cancelar](docs/evidencias/sesion-09-cancelar-sin-mensaje.png)
+
+## Sesión 10 · CRUD de tareas con la API
+
+TaskFlow ya crea, consulta, edita, marca y elimina tareas contra JSONPlaceholder. El flujo sigue siendo **Pantalla → ViewModel → Repository → ApiService → Dio**: las pantallas no llaman a Dio.
+
+```
+lib/features/tasks/
+  domain/task.dart                  ← copyWith(title, isCompleted) y toJson()
+  data/task_api_service.dart        ← createTask (POST), updateTask (PATCH), deleteTask (DELETE)
+  data/task_repository.dart         ← contrato con createTask, updateTask y deleteTask
+  data/remote_task_repository.dart  ← usa la API y mantiene la lista en memoria
+  data/local_task_repository.dart   ← misma interfaz para pruebas sin red
+  presentation/tasks_view_model.dart ← createTask, updateTask y deleteTask
+  presentation/task_list_screen.dart ← Guardar del formulario hace POST
+  presentation/task_detail_screen.dart ← Editar título, Marcar (PATCH) y Eliminar con confirmación
+```
+
+| Operación | Método y endpoint | Dónde se usa |
+|---|---|---|
+| Consultar | `GET /todos?userId=2` | Lista al abrir y al deslizar |
+| Crear | `POST /todos` | Guardar en **Nueva tarea** |
+| Editar / marcar | `PATCH /todos/{id}` | **Editar título** y **Marcar como completada/pendiente** |
+| Eliminar | `DELETE /todos/{id}` | **Eliminar** (ícono o botón) tras confirmar |
+
+- La lista solo cambia **después** de una respuesta correcta: si la petición falla no se muestra éxito y aparece `No se pudo crear la tarea`, `No se pudo actualizar` o `No se pudo eliminar la tarea`.
+- **Eliminar** abre un `AlertDialog` (Cancelar / Eliminar); al confirmar vuelve a la lista con `Tarea eliminada: <título>`.
+- **Editar título** usa la misma regla del formulario (mínimo 3 caracteres).
+
+**Importante: JSONPlaceholder simula las escrituras.** Responde `201` al crear y `200` al editar o eliminar, pero no guarda nada: al reiniciar la app o deslizar para actualizar vuelven los datos originales. El `POST` siempre devuelve el id `201`; si ese id ya estuviera en la lista, el Repository usa el siguiente libre para que cada ruta `/task/:id` sea única.
+
+Comprobaciones: `dart format lib test`, `flutter analyze` sin problemas y `flutter test` con 27 pruebas (Repository local, `copyWith`/`toJson`, ViewModel con éxito y con error, crear desde el formulario, editar título, eliminar con confirmación y error al eliminar sin mensaje de éxito).
+
+## Evidencias de la sesión 10
+
+Emulador Android Pixel 10 (`emulator-5554`), 24 de noviembre de 2026, capturas con `adb shell screencap` y la app en ejecución contra JSONPlaceholder. Consola: [`docs/evidencias/sesion-10-consola.txt`](docs/evidencias/sesion-10-consola.txt).
+
+### Antes de crear (20 tareas del usuario 2)
+
+![Lista remota con 20 tareas](docs/evidencias/sesion-10-01-lista-antes.png)
+
+### Crear: formulario y resultado del POST
+
+![Formulario Publicar el CRUD con prioridad Alta](docs/evidencias/sesion-10-02-formulario-crear.png)
+
+![SnackBar Tarea creada y contador en 21 tareas](docs/evidencias/sesion-10-03-tarea-creada.png)
+
+![La tarea creada aparece al final de la lista](docs/evidencias/sesion-10-04-creada-al-final.png)
+
+### Editar: antes, diálogo y después del PATCH
+
+![Detalle de Publicar el CRUD antes de editar](docs/evidencias/sesion-10-05-detalle-antes.png)
+
+![Diálogo Editar título con el nuevo texto](docs/evidencias/sesion-10-06-editar-dialogo.png)
+
+![Detalle con el título Publicar el CRUD completo](docs/evidencias/sesion-10-07-tarea-editada.png)
+
+![Estado completada después del PATCH con su SnackBar](docs/evidencias/sesion-10-08-marcada-patch.png)
+
+### Eliminar: confirmación y lista sin la tarea
+
+![AlertDialog Eliminar tarea con Cancelar y Eliminar](docs/evidencias/sesion-10-09-eliminar-confirmacion.png)
+
+![Final de la lista sin Publicar el CRUD completo](docs/evidencias/sesion-10-10-tarea-eliminada.png)
+
+### Consola
+
+```
+POST /todos → HTTP 201
+PATCH /todos/201 → HTTP 200   (editar título)
+PATCH /todos/201 → HTTP 200   (marcar como completada)
+DELETE /todos/201 → HTTP 200
+```

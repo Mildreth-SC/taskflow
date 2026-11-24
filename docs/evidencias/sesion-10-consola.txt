@@ -1,0 +1,8 @@
+Sesión 10 · flutter run -d emulator-5554 (Pixel_10, API JSONPlaceholder)
+I/flutter (15250): GET /todos?userId=2 → HTTP 200
+I/flutter (15250): POST /todos → HTTP 201
+I/flutter (15250): PATCH /todos/201 → HTTP 200
+I/flutter (15250): PATCH /todos/201 → HTTP 200
+I/flutter (15250): DELETE /todos/201 → HTTP 200
+I/flutter (15250): GET /todos?userId=2 → HTTP 200
+I/flutter (15250): GET /todos?userId=2 → HTTP 200
