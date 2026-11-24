@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/settings_view_model.dart';
 import '../../../core/task_failure.dart';
+import '../../../core/user_preferences.dart';
 import '../domain/task.dart';
 import 'task_form_screen.dart';
 import 'tasks_view_model.dart';
@@ -98,6 +100,15 @@ class TaskStateMessage extends StatelessWidget {
   };
 }
 
+/// true si la tarea se ve con el filtro elegido.
+bool matchesFilter(TaskFilter filter, Task task) {
+  return switch (filter) {
+    TaskFilter.all => true,
+    TaskFilter.pending => !task.isCompleted,
+    TaskFilter.completed => task.isCompleted,
+  };
+}
+
 /// La vista solo lee el estado del ViewModel y llama a sus acciones.
 /// No conoce Dio ni hace solicitudes HTTP.
 class TaskListScreen extends StatelessWidget {
@@ -179,24 +190,59 @@ class TaskListScreen extends StatelessWidget {
         onAction: () => context.read<TasksViewModel>().loadTasks(),
       );
     }
+    final settings = context.watch<SettingsViewModel>();
+    final filter = settings.filter;
+    final visible = viewModel.tasks
+        .where((task) => matchesFilter(filter, task))
+        .toList();
+    final total = viewModel.tasks.length;
+    final count = filter == TaskFilter.all
+        ? '$total tareas'
+        : '${visible.length} de $total tareas (${filter.label.toLowerCase()})';
     return RefreshIndicator(
       onRefresh: () => context.read<TasksViewModel>().loadTasks(),
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-        itemCount: viewModel.tasks.length + 1,
+        itemCount: visible.isEmpty ? 2 : visible.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                '${viewModel.tasks.length} tareas · desliza hacia abajo '
-                'para actualizar',
-                style: Theme.of(context).textTheme.bodySmall,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // El filtro elegido se guarda y se recupera al reabrir.
+                  SegmentedButton<TaskFilter>(
+                    showSelectedIcon: false,
+                    segments: [
+                      for (final option in TaskFilter.values)
+                        ButtonSegment(value: option, label: Text(option.label)),
+                    ],
+                    selected: {filter},
+                    onSelectionChanged: (selection) => context
+                        .read<SettingsViewModel>()
+                        .setFilter(selection.first),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '$count · desliza hacia abajo para actualizar',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
               ),
             );
           }
-          final task = viewModel.tasks[index - 1];
+          if (visible.isEmpty) {
+            return Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'No hay tareas ${filter.label.toLowerCase()} con este filtro.',
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+          final task = visible[index - 1];
           return TaskCard(
             task: task,
             onTap: () => context.push('/task/${task.id}'),
