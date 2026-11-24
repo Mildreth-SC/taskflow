@@ -357,13 +357,7 @@ void main() {
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
     expect(routeOf(tester), '/');
-    expect(
-      find.text(
-        'Tarea lista: Estudiar para el parcial · Alta · sin fecha límite. '
-        'Se enviará a la API en la sesión 10.',
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('Tarea creada'), findsOneWidget);
   });
 
   testWidgets('Cancelar regresa sin mensaje', (tester) async {
