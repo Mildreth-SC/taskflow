@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
-/// Borrador temporal de una tarea. Todavía no se envía a la API: la
-/// sesión 10 usará este objeto para el POST.
+import 'tasks_view_model.dart';
+
+/// Datos validados del formulario. La pantalla los envía con POST y solo
+/// vuelve a la lista con este objeto cuando la API confirmó la creación.
 class TaskDraft {
   const TaskDraft(this.title, this.description, this.priority, {this.dueDate});
 
@@ -89,7 +92,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     if (picked != null) setState(() => _dueDate = picked);
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       setState(() => _autovalidate = AutovalidateMode.onUserInteraction);
       return;
@@ -100,92 +103,127 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       _priority!,
       dueDate: _dueDate,
     );
-    context.pop(draft);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      // Guardar queda deshabilitado mientras isSaving es true; un segundo
+      // toque devuelve false y no envía otro POST.
+      final sent = await context.read<TasksViewModel>().createTask(
+        draft.title,
+        draft.description,
+        draft.priority,
+      );
+      if (!sent || !mounted) return;
+      context.pop(draft);
+    } catch (error) {
+      // El formulario se queda abierto con los datos para reintentar.
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(saveErrorText('crear la tarea', error))),
+        );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Nueva tarea')),
-      body: Form(
-        key: _formKey,
-        autovalidateMode: _autovalidate,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              key: const Key('titleField'),
-              controller: _title,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Título *',
-                hintText: 'Ej.: Estudiar para el parcial',
-                prefixIcon: Icon(Icons.title),
+    final saving = context.watch<TasksViewModel>().isSaving;
+    return PopScope(
+      // No se sale a mitad de un envío: la respuesta podría perderse.
+      canPop: !saving,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Nueva tarea')),
+        body: Form(
+          key: _formKey,
+          autovalidateMode: _autovalidate,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              TextFormField(
+                key: const Key('titleField'),
+                controller: _title,
+                enabled: !saving,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'Título *',
+                  hintText: 'Ej.: Estudiar para el parcial',
+                  prefixIcon: Icon(Icons.title),
+                ),
+                validator: TaskFormValidators.title,
               ),
-              validator: TaskFormValidators.title,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              key: const Key('descriptionField'),
-              controller: _description,
-              decoration: const InputDecoration(
-                labelText: 'Descripción',
-                hintText: 'Detalles que te ayuden a cumplirla',
-                prefixIcon: Icon(Icons.notes),
+              const SizedBox(height: 12),
+              TextFormField(
+                key: const Key('descriptionField'),
+                controller: _description,
+                enabled: !saving,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción',
+                  hintText: 'Detalles que te ayuden a cumplirla',
+                  prefixIcon: Icon(Icons.notes),
+                ),
+                maxLines: 3,
+                validator: TaskFormValidators.description,
               ),
-              maxLines: 3,
-              validator: TaskFormValidators.description,
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              key: const Key('priorityField'),
-              initialValue: _priority,
-              decoration: const InputDecoration(
-                labelText: 'Prioridad *',
-                prefixIcon: Icon(Icons.flag_outlined),
-              ),
-              items: TaskFormValidators.priorities
-                  .map(
-                    (value) =>
-                        DropdownMenuItem(value: value, child: Text(value)),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() => _priority = value),
-              validator: TaskFormValidators.priority,
-            ),
-            const SizedBox(height: 12),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.event),
-              title: Text(
-                _dueDate == null
-                    ? 'Sin fecha límite (opcional)'
-                    : 'Fecha límite: ${formatDate(_dueDate!)}',
-              ),
-              trailing: _dueDate == null
-                  ? TextButton(
-                      onPressed: _pickDate,
-                      child: const Text('Elegir fecha'),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                key: const Key('priorityField'),
+                initialValue: _priority,
+                decoration: const InputDecoration(
+                  labelText: 'Prioridad *',
+                  prefixIcon: Icon(Icons.flag_outlined),
+                ),
+                items: TaskFormValidators.priorities
+                    .map(
+                      (value) =>
+                          DropdownMenuItem(value: value, child: Text(value)),
                     )
-                  : IconButton(
-                      tooltip: 'Quitar fecha',
-                      onPressed: () => setState(() => _dueDate = null),
-                      icon: const Icon(Icons.close),
-                    ),
-              onTap: _pickDate,
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: _submit,
-              icon: const Icon(Icons.save),
-              label: const Text('Guardar'),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: () => context.pop(),
-              child: const Text('Cancelar'),
-            ),
-          ],
+                    .toList(),
+                onChanged: saving
+                    ? null
+                    : (value) => setState(() => _priority = value),
+                validator: TaskFormValidators.priority,
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                enabled: !saving,
+                leading: const Icon(Icons.event),
+                title: Text(
+                  _dueDate == null
+                      ? 'Sin fecha límite (opcional)'
+                      : 'Fecha límite: ${formatDate(_dueDate!)}',
+                ),
+                trailing: _dueDate == null
+                    ? TextButton(
+                        onPressed: saving ? null : _pickDate,
+                        child: const Text('Elegir fecha'),
+                      )
+                    : IconButton(
+                        tooltip: 'Quitar fecha',
+                        onPressed: saving
+                            ? null
+                            : () => setState(() => _dueDate = null),
+                        icon: const Icon(Icons.close),
+                      ),
+                onTap: _pickDate,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: saving ? null : _submit,
+                icon: saving
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save),
+                label: Text(saving ? 'Guardando…' : 'Guardar'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: saving ? null : () => context.pop(),
+                child: const Text('Cancelar'),
+              ),
+            ],
+          ),
         ),
       ),
     );

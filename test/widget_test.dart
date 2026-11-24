@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -90,6 +92,24 @@ class ReadOnlyTaskRepository extends LocalTaskRepository {
 
   @override
   Future<void> deleteTask(int id) async => throw offline;
+}
+
+/// POST que espera hasta que la prueba lo libera, para ver Guardar
+/// deshabilitado mientras se envía.
+class SlowCreateRepository extends LocalTaskRepository {
+  final pending = Completer<void>();
+  int createCalls = 0;
+
+  @override
+  Future<Task> createTask(
+    String title,
+    String description,
+    String priority,
+  ) async {
+    createCalls++;
+    await pending.future;
+    return super.createTask(title, description, priority);
+  }
 }
 
 Widget buildApp(TaskRepository repository) {
@@ -498,9 +518,95 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Eliminar'));
     await tester.pumpAndSettle();
-    expect(find.text('No se pudo eliminar la tarea'), findsOneWidget);
+    expect(
+      find.text('No se pudo eliminar la tarea. Revisa tu conexión a internet.'),
+      findsOneWidget,
+    );
     expect(find.textContaining('Tarea eliminada'), findsNothing);
     expect(routeOf(tester), '/task/1');
+  });
+
+  test('TasksViewModel ignora un segundo envío mientras guarda', () async {
+    final repository = SlowCreateRepository();
+    final viewModel = TasksViewModel(repository);
+    await viewModel.loadTasks();
+
+    final first = viewModel.createTask('Uno', '', 'Alta');
+    expect(viewModel.isSaving, isTrue);
+    expect(await viewModel.createTask('Dos', '', 'Alta'), isFalse);
+    repository.pending.complete();
+    expect(await first, isTrue);
+    expect(viewModel.isSaving, isFalse);
+    expect(repository.createCalls, 1);
+    expect(viewModel.tasks, hasLength(6));
+  });
+
+  testWidgets('Guardar se deshabilita mientras se envía el POST', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final repository = SlowCreateRepository();
+    await tester.pumpWidget(buildApp(repository));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nueva tarea'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('titleField')), 'Sin duplicar');
+    await tester.tap(find.byKey(const Key('priorityField')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Media').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Guardar'));
+    await tester.pump();
+    expect(find.text('Guardando…'), findsOneWidget);
+    final button = tester.widget<ButtonStyleButton>(
+      find.ancestor(
+        of: find.text('Guardando…'),
+        matching: find.bySubtype<ButtonStyleButton>(),
+      ),
+    );
+    expect(button.onPressed, isNull);
+    await tester.tap(find.text('Guardando…'), warnIfMissed: false);
+    await tester.pump();
+
+    repository.pending.complete();
+    await tester.pumpAndSettle();
+    expect(repository.createCalls, 1);
+    expect(routeOf(tester), '/');
+    expect(find.textContaining('Tarea creada: Sin duplicar'), findsOneWidget);
+  });
+
+  testWidgets('si el POST falla el formulario sigue abierto con sus datos', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(buildApp(ReadOnlyTaskRepository()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nueva tarea'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('titleField')), 'Sin red');
+    await tester.tap(find.byKey(const Key('priorityField')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Alta').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(routeOf(tester), '/new');
+    expect(
+      find.text('No se pudo crear la tarea. Revisa tu conexión a internet.'),
+      findsOneWidget,
+    );
+    expect(find.text('Sin red'), findsOneWidget);
+    expect(find.text('Guardar'), findsOneWidget);
   });
 
   testWidgets('marcar una tarea actualiza el detalle y la lista', (

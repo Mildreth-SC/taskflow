@@ -125,31 +125,14 @@ class TaskListScreen extends StatelessWidget {
         onPressed: () async {
           final draft = await context.push<TaskDraft>('/new');
           if (!context.mounted || draft == null) return;
-          final messenger = ScaffoldMessenger.of(context);
-          try {
-            await context.read<TasksViewModel>().createTask(
-              draft.title,
-              draft.description,
-              draft.priority,
-            );
-            messenger.showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Tarea creada: ${draft.title}. '
-                  'Aparece al final de la lista.',
-                ),
+          // El formulario ya hizo el POST; solo vuelve si la API respondió.
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Tarea creada: ${draft.title}. Aparece al final de la lista.',
               ),
-            );
-          } catch (_) {
-            messenger.showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'No se pudo crear la tarea. Revisa tu conexión e '
-                  'inténtalo de nuevo.',
-                ),
-              ),
-            );
-          }
+            ),
+          );
         },
         icon: const Icon(Icons.add),
         label: const Text('Nueva tarea'),

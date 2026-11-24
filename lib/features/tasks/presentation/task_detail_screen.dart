@@ -22,17 +22,17 @@ class TaskDetailScreen extends StatelessWidget {
   Future<void> _toggle(BuildContext context, Task task) async {
     final completed = !task.isCompleted;
     try {
-      await context.read<TasksViewModel>().updateTask(
+      final sent = await context.read<TasksViewModel>().updateTask(
         task.copyWith(isCompleted: completed),
       );
-      if (!context.mounted) return;
+      if (!sent || !context.mounted) return;
       _show(
         context,
         completed ? 'Tarea marcada como completada' : 'Tarea marcada pendiente',
       );
-    } catch (_) {
+    } catch (error) {
       if (!context.mounted) return;
-      _show(context, 'No se pudo actualizar el estado');
+      _show(context, saveErrorText('actualizar el estado', error));
     }
   }
 
@@ -44,14 +44,14 @@ class TaskDetailScreen extends StatelessWidget {
     );
     if (!context.mounted || newTitle == null || newTitle == task.title) return;
     try {
-      await context.read<TasksViewModel>().updateTask(
+      final sent = await context.read<TasksViewModel>().updateTask(
         task.copyWith(title: newTitle),
       );
-      if (!context.mounted) return;
+      if (!sent || !context.mounted) return;
       _show(context, 'Tarea actualizada');
-    } catch (_) {
+    } catch (error) {
       if (!context.mounted) return;
-      _show(context, 'No se pudo actualizar');
+      _show(context, saveErrorText('actualizar el título', error));
     }
   }
 
@@ -78,30 +78,39 @@ class TaskDetailScreen extends StatelessWidget {
     if (confirmed != true || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await context.read<TasksViewModel>().deleteTask(task.id);
-      if (!context.mounted) return;
+      final sent = await context.read<TasksViewModel>().deleteTask(task.id);
+      if (!sent || !context.mounted) return;
       context.pop();
       messenger.showSnackBar(
         SnackBar(content: Text('Tarea eliminada: ${task.title}')),
       );
-    } catch (_) {
+    } catch (error) {
       if (!context.mounted) return;
-      _show(context, 'No se pudo eliminar la tarea');
+      _show(context, saveErrorText('eliminar la tarea', error));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final selected = context.watch<TasksViewModel>().findTask(taskId);
+    final viewModel = context.watch<TasksViewModel>();
+    final selected = viewModel.findTask(taskId);
+    // Mientras se envía una solicitud, las acciones quedan deshabilitadas.
+    final saving = viewModel.isSaving;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle de tarea'),
+        bottom: saving
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(4),
+                child: LinearProgressIndicator(),
+              )
+            : null,
         actions: [
           if (selected != null)
             IconButton(
               tooltip: 'Eliminar tarea',
-              onPressed: () => _delete(context, selected),
+              onPressed: saving ? null : () => _delete(context, selected),
               icon: const Icon(Icons.delete_outline),
             ),
         ],
@@ -160,7 +169,7 @@ class TaskDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   FilledButton.icon(
-                    onPressed: () => _toggle(context, selected),
+                    onPressed: saving ? null : () => _toggle(context, selected),
                     icon: Icon(selected.isCompleted ? Icons.undo : Icons.check),
                     label: Text(
                       selected.isCompleted
@@ -174,12 +183,16 @@ class TaskDetailScreen extends StatelessWidget {
                     runSpacing: 8,
                     children: [
                       OutlinedButton.icon(
-                        onPressed: () => _editTitle(context, selected),
+                        onPressed: saving
+                            ? null
+                            : () => _editTitle(context, selected),
                         icon: const Icon(Icons.edit),
                         label: const Text('Editar título'),
                       ),
                       OutlinedButton.icon(
-                        onPressed: () => _delete(context, selected),
+                        onPressed: saving
+                            ? null
+                            : () => _delete(context, selected),
                         icon: const Icon(Icons.delete_outline),
                         label: const Text('Eliminar'),
                       ),
