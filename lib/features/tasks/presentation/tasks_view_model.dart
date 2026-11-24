@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../core/task_failure.dart';
 import '../data/task_repository.dart';
 import '../domain/task.dart';
 
@@ -11,6 +12,11 @@ class TasksViewModel extends ChangeNotifier {
   List<Task> _tasks = [];
   bool isLoading = false;
   String? errorMessage;
+  TaskFailureKind? errorKind;
+
+  /// true mientras se envía un POST, PATCH o DELETE: la vista deshabilita
+  /// Guardar y los botones del detalle para no duplicar solicitudes.
+  bool isSaving = false;
 
   List<Task> get tasks => List.unmodifiable(_tasks);
 
@@ -22,13 +28,20 @@ class TasksViewModel extends ChangeNotifier {
     if (isLoading) return;
     isLoading = true;
     errorMessage = null;
+    errorKind = null;
     notifyListeners();
     try {
       _tasks = await _repository.getTasks();
+    } on TaskFailure catch (failure) {
+      _tasks = [];
+      errorMessage = failure.message;
+      errorKind = failure.kind;
+      debugPrint('Error al cargar tareas (${failure.kind.name}): $failure');
     } catch (error) {
       _tasks = [];
-      errorMessage = 'No se pudieron cargar las tareas.';
-      debugPrint('Error al cargar tareas: $error');
+      errorMessage = 'Ocurrió un problema inesperado.';
+      errorKind = TaskFailureKind.unexpected;
+      debugPrint('Error inesperado: $error');
     } finally {
       isLoading = false;
       notifyListeners();
@@ -56,31 +69,58 @@ class TasksViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Solo agrega la tarea cuando el Repository confirma el POST.
-  Future<void> createTask(
-    String title,
-    String description,
-    String priority,
-  ) async {
-    final created = await _repository.createTask(title, description, priority);
-    _tasks = [..._tasks, created];
+  /// Ejecuta una escritura a la vez. Devuelve false si ya había otra en
+  /// curso (por ejemplo, un doble toque en Guardar) y no envía nada.
+  /// Los errores llegan a la vista como [TaskFailure].
+  Future<bool> _write(Future<void> Function() action) async {
+    if (isSaving) return false;
+    isSaving = true;
     notifyListeners();
+    try {
+      await action();
+      return true;
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Solo agrega la tarea cuando el Repository confirma el POST.
+  Future<bool> createTask(String title, String description, String priority) {
+    return _write(() async {
+      final created = await _repository.createTask(
+        title,
+        description,
+        priority,
+      );
+      _tasks = [..._tasks, created];
+    });
   }
 
   /// PATCH: actualiza la vista solo después de una respuesta correcta.
-  Future<void> updateTask(Task task) async {
-    await _repository.updateTask(task);
-    _tasks = [
-      for (final item in _tasks)
-        if (item.id == task.id) task else item,
-    ];
-    notifyListeners();
+  Future<bool> updateTask(Task task) {
+    return _write(() async {
+      await _repository.updateTask(task);
+      _tasks = [
+        for (final item in _tasks)
+          if (item.id == task.id) task else item,
+      ];
+    });
   }
 
   /// DELETE: quita la tarea de la lista solo si la API respondió bien.
-  Future<void> deleteTask(int id) async {
-    await _repository.deleteTask(id);
-    _tasks = _tasks.where((task) => task.id != id).toList();
-    notifyListeners();
+  Future<bool> deleteTask(int id) {
+    return _write(() async {
+      await _repository.deleteTask(id);
+      _tasks = _tasks.where((task) => task.id != id).toList();
+    });
   }
+}
+
+/// Texto para un SnackBar cuando falla una escritura, sin detalles técnicos.
+String saveErrorText(String action, Object error) {
+  final reason = error is TaskFailure
+      ? error.message
+      : 'Ocurrió un problema inesperado.';
+  return 'No se pudo $action. $reason';
 }

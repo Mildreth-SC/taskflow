@@ -3,29 +3,35 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:taskflow/app/taskflow_app.dart';
+import 'package:taskflow/core/task_failure.dart';
 import 'package:taskflow/features/tasks/data/local_task_repository.dart';
 import 'package:taskflow/features/tasks/data/task_repository.dart';
 import 'package:taskflow/features/tasks/domain/task.dart';
 import 'package:taskflow/features/tasks/presentation/task_form_screen.dart';
 import 'package:taskflow/features/tasks/presentation/tasks_view_model.dart';
 
+const offline = TaskFailure(
+  'Revisa tu conexión a internet.',
+  kind: TaskFailureKind.network,
+);
+
 /// Repositorio que siempre falla, para probar el mensaje de error sin red.
 class FailingTaskRepository implements TaskRepository {
   @override
-  Future<List<Task>> getTasks() async => throw Exception('sin conexión');
+  Future<List<Task>> getTasks() async => throw offline;
 
   @override
   void save(Task task) {}
 
   @override
   Future<Task> createTask(String title, String description, String priority) =>
-      throw Exception('sin conexión');
+      throw offline;
 
   @override
-  Future<void> updateTask(Task task) async => throw Exception('sin conexión');
+  Future<void> updateTask(Task task) async => throw offline;
 
   @override
-  Future<void> deleteTask(int id) async => throw Exception('sin conexión');
+  Future<void> deleteTask(int id) async => throw offline;
 }
 
 /// Respuesta válida sin tareas (como userId=9999 en la API).
@@ -38,13 +44,13 @@ class EmptyTaskRepository implements TaskRepository {
 
   @override
   Future<Task> createTask(String title, String description, String priority) =>
-      throw Exception('sin conexión');
+      throw offline;
 
   @override
-  Future<void> updateTask(Task task) async => throw Exception('sin conexión');
+  Future<void> updateTask(Task task) async => throw offline;
 
   @override
-  Future<void> deleteTask(int id) async => throw Exception('sin conexión');
+  Future<void> deleteTask(int id) async => throw offline;
 }
 
 /// Falla en el primer intento y responde en los siguientes, como cuando
@@ -55,7 +61,7 @@ class FlakyTaskRepository implements TaskRepository {
   @override
   Future<List<Task>> getTasks() async {
     calls++;
-    if (calls == 1) throw Exception('sin conexión');
+    if (calls == 1) throw offline;
     return LocalTaskRepository().getTasks();
   }
 
@@ -64,26 +70,26 @@ class FlakyTaskRepository implements TaskRepository {
 
   @override
   Future<Task> createTask(String title, String description, String priority) =>
-      throw Exception('sin conexión');
+      throw offline;
 
   @override
-  Future<void> updateTask(Task task) async => throw Exception('sin conexión');
+  Future<void> updateTask(Task task) async => throw offline;
 
   @override
-  Future<void> deleteTask(int id) async => throw Exception('sin conexión');
+  Future<void> deleteTask(int id) async => throw offline;
 }
 
 /// Lee las tareas locales pero falla al escribir, como una API caída.
 class ReadOnlyTaskRepository extends LocalTaskRepository {
   @override
   Future<Task> createTask(String title, String description, String priority) =>
-      throw Exception('sin conexión');
+      throw offline;
 
   @override
-  Future<void> updateTask(Task task) async => throw Exception('sin conexión');
+  Future<void> updateTask(Task task) async => throw offline;
 
   @override
-  Future<void> deleteTask(int id) async => throw Exception('sin conexión');
+  Future<void> deleteTask(int id) async => throw offline;
 }
 
 Widget buildApp(TaskRepository repository) {
@@ -178,7 +184,8 @@ void main() {
     final viewModel = TasksViewModel(FailingTaskRepository());
     await viewModel.loadTasks();
     expect(viewModel.isLoading, isFalse);
-    expect(viewModel.errorMessage, 'No se pudieron cargar las tareas.');
+    expect(viewModel.errorMessage, 'Revisa tu conexión a internet.');
+    expect(viewModel.errorKind, TaskFailureKind.network);
     expect(viewModel.tasks, isEmpty);
   });
 
@@ -276,7 +283,8 @@ void main() {
   ) async {
     await tester.pumpWidget(buildApp(FailingTaskRepository()));
     await tester.pumpAndSettle();
-    expect(find.text('No se pudieron cargar las tareas.'), findsOneWidget);
+    expect(find.text('Sin conexión'), findsOneWidget);
+    expect(find.text('Revisa tu conexión a internet.'), findsOneWidget);
   });
 
   testWidgets('la lista vacía ofrece Actualizar, no Reintentar', (

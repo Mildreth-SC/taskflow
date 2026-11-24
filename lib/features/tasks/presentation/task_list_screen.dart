@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/task_failure.dart';
 import '../domain/task.dart';
 import 'task_form_screen.dart';
 import 'tasks_view_model.dart';
@@ -80,6 +81,23 @@ class TaskStateMessage extends StatelessWidget {
   }
 }
 
+/// Icono y título del estado de error según el tipo de fallo.
+(IconData, String) errorHeading(TaskFailureKind? kind) {
+  return switch (kind) {
+    TaskFailureKind.network => (Icons.wifi_off, 'Sin conexión'),
+    TaskFailureKind.timeout => (
+      Icons.hourglass_bottom,
+      'El servidor no respondió a tiempo',
+    ),
+    TaskFailureKind.server => (
+      Icons.dns_outlined,
+      'La API respondió con error',
+    ),
+    TaskFailureKind.data => (Icons.data_object, 'Datos inesperados'),
+    _ => (Icons.error_outline, 'No se pudieron cargar las tareas'),
+  };
+}
+
 /// La vista solo lee el estado del ViewModel y llama a sus acciones.
 /// No conoce Dio ni hace solicitudes HTTP.
 class TaskListScreen extends StatelessWidget {
@@ -153,10 +171,11 @@ class TaskListScreen extends StatelessWidget {
       );
     }
     if (viewModel.errorMessage != null) {
+      final (icon, title) = errorHeading(viewModel.errorKind);
       return TaskStateMessage(
-        icon: Icons.cloud_off,
-        title: viewModel.errorMessage!,
-        message: 'Revisa tu conexión a internet y vuelve a intentarlo.',
+        icon: icon,
+        title: title,
+        message: viewModel.errorMessage!,
         actionLabel: 'Reintentar',
         actionIcon: Icons.replay,
         onAction: () => context.read<TasksViewModel>().loadTasks(),
