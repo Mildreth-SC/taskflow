@@ -475,7 +475,11 @@ void main() {
       find.text('6 tareas · desliza hacia abajo para actualizar'),
       findsOneWidget,
     );
-    await tester.scrollUntilVisible(find.text('Tarea CRUD'), 200);
+    await tester.scrollUntilVisible(
+      find.text('Tarea CRUD'),
+      200,
+      scrollable: listScrollable,
+    );
     expect(find.text('Tarea CRUD'), findsOneWidget);
   });
 
@@ -750,8 +754,22 @@ void main() {
   });
 }
 
+/// Desde la sesión 14 el campo de búsqueda también tiene un Scrollable,
+/// así que se indica el de la lista (el primero del árbol).
+final listScrollable = find.byType(Scrollable).first;
+
 Future<void> openTask(WidgetTester tester, String title) async {
-  await tester.scrollUntilVisible(find.text(title), 200);
+  await tester.scrollUntilVisible(
+    find.text(title),
+    200,
+    scrollable: listScrollable,
+  );
+  // Centra la tarjeta para que el botón flotante no la tape.
+  await Scrollable.ensureVisible(
+    tester.element(find.text(title)),
+    alignment: 0.5,
+  );
+  await tester.pumpAndSettle();
   await tester.tap(find.text(title));
   await tester.pumpAndSettle();
 }

@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../../../core/settings_view_model.dart';
 import '../../../core/task_failure.dart';
-import '../../../core/user_preferences.dart';
 import '../domain/task.dart';
 import 'task_form_screen.dart';
+import 'task_search_controls.dart';
 import 'tasks_view_model.dart';
 
 class TaskCard extends StatelessWidget {
@@ -181,15 +181,9 @@ class TaskListScreen extends StatelessWidget {
         onAction: () => context.read<TasksViewModel>().loadTasks(),
       );
     }
-    final settings = context.watch<SettingsViewModel>();
-    final filter = settings.filter;
-    final visible = viewModel.tasks
-        .where((task) => matchesFilter(filter, task))
-        .toList();
-    final total = viewModel.tasks.length;
-    final count = filter == TaskFilter.all
-        ? '$total tareas'
-        : '${visible.length} de $total tareas (${filter.label.toLowerCase()})';
+    final filter = context.watch<SettingsViewModel>().filter;
+    // Lista derivada: no modifica las tareas cargadas.
+    final visible = viewModel.visibleTasks(filter);
     return RefreshIndicator(
       onRefresh: () => context.read<TasksViewModel>().loadTasks(),
       child: ListView.builder(
@@ -198,44 +192,35 @@ class TaskListScreen extends StatelessWidget {
         itemCount: visible.isEmpty ? 2 : visible.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Nombre recordado en Configuración (preferencia local).
-                  Text(
-                    'Hola, ${settings.name}',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  // El filtro elegido se guarda y se recupera al reabrir.
-                  SegmentedButton<TaskFilter>(
-                    showSelectedIcon: false,
-                    segments: [
-                      for (final option in TaskFilter.values)
-                        ButtonSegment(value: option, label: Text(option.label)),
-                    ],
-                    selected: {filter},
-                    onSelectionChanged: (selection) => context
-                        .read<SettingsViewModel>()
-                        .setFilter(selection.first),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '$count · desliza hacia abajo para actualizar',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
+            return const Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: TaskSearchControls(),
             );
           }
           if (visible.isEmpty) {
+            // Cero coincidencias no es lo mismo que una API sin tareas.
             return Padding(
               padding: const EdgeInsets.all(24),
-              child: Text(
-                'No hay tareas ${filter.label.toLowerCase()} con este filtro.',
-                textAlign: TextAlign.center,
+              child: Column(
+                children: [
+                  const Icon(Icons.search_off, size: 48),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'No hay resultados para estos filtros.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Prueba con otro texto o limpia los filtros.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.tonalIcon(
+                    onPressed: () => clearAllFilters(context),
+                    icon: const Icon(Icons.filter_alt_off),
+                    label: const Text('Limpiar filtros'),
+                  ),
+                ],
               ),
             );
           }
