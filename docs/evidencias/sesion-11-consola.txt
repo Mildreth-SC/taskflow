@@ -1,17 +1,22 @@
 Sesión 11 · flutter run -d emulator-5554 (Pixel_10, API JSONPlaceholder)
 
+Nota de honestidad (agregada en la sesión 12): las líneas de los bloques 1, 2 y 3
+marcadas "(reconstruido)" se transcribieron de la salida que se vio en pantalla
+durante la ejecución, porque el archivo de log de esa corrida se sobrescribió antes
+de guardarlo. Los bloques 4 y 5 se copiaron del log guardado sin cambios.
+
 1) Sin conexión (modo avión) y Reintentar
-I/flutter ( 5967): GET /todos?userId=2 → HTTP 200
-I/flutter ( 5967): GET /todos falló: connectionError (HTTP -)
-I/flutter ( 5967): Error al cargar tareas (network): Revisa tu conexión a internet.
-I/flutter ( 5967): GET /todos?userId=2 → HTTP 200
+I/flutter ( 5967): GET /todos?userId=2 → HTTP 200   (reconstruido)
+I/flutter ( 5967): GET /todos falló: connectionError (HTTP -)   (reconstruido)
+I/flutter ( 5967): Error al cargar tareas (network): Revisa tu conexión a internet.   (reconstruido)
+I/flutter ( 5967): GET /todos?userId=2 → HTTP 200   (reconstruido)
 
 2) Guardar con red lenta (tres toques en Guardar → un solo POST)
-I/flutter ( 5967): POST /todos → HTTP 201
+I/flutter ( 5967): POST /todos → HTTP 201   (reconstruido)
 
 3) Guardar sin internet y reintentar con red
-I/flutter ( 5967): POST /todos falló: connectionError (HTTP -)
-I/flutter ( 5967): POST /todos → HTTP 201
+I/flutter ( 5967): POST /todos falló: connectionError (HTTP -)   (reconstruido)
+I/flutter ( 5967): POST /todos → HTTP 201   (reconstruido)
 
 4) Ruta temporal /ruta-inexistente (no se versiona)
 I/flutter (11083): GET /todos falló: badResponse (HTTP 404)
