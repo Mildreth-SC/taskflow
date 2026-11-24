@@ -6,3 +6,12 @@ final ThemeData appTheme = ThemeData(
   colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F6F5B)),
   useMaterial3: true,
 );
+
+/// Variante oscura con la misma semilla, para la preferencia de tema.
+final ThemeData appDarkTheme = ThemeData(
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: const Color(0xFF1F6F5B),
+    brightness: Brightness.dark,
+  ),
+  useMaterial3: true,
+);

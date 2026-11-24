@@ -5,12 +5,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:taskflow/app/taskflow_app.dart';
+import 'package:taskflow/core/settings_view_model.dart';
 import 'package:taskflow/core/task_failure.dart';
+import 'package:taskflow/core/user_preferences.dart';
 import 'package:taskflow/features/tasks/data/local_task_repository.dart';
 import 'package:taskflow/features/tasks/data/task_repository.dart';
 import 'package:taskflow/features/tasks/domain/task.dart';
 import 'package:taskflow/features/tasks/presentation/task_form_screen.dart';
 import 'package:taskflow/features/tasks/presentation/tasks_view_model.dart';
+
+import 'memory_store.dart';
 
 const offline = TaskFailure(
   'Revisa tu conexión a internet.',
@@ -132,9 +136,16 @@ class _BrokenRepository extends LocalTaskRepository {
   Future<List<Task>> getTasks() async => throw StateError('null check');
 }
 
-Widget buildApp(TaskRepository repository) {
-  return ChangeNotifierProvider(
-    create: (_) => TasksViewModel(repository)..loadTasks(),
+Widget buildApp(TaskRepository repository, {SettingsViewModel? settings}) {
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider<SettingsViewModel>.value(
+        value: settings ?? SettingsViewModel(UserPreferences(MemoryStore())),
+      ),
+      ChangeNotifierProvider(
+        create: (_) => TasksViewModel(repository)..loadTasks(),
+      ),
+    ],
     child: const TaskFlowApp(),
   );
 }

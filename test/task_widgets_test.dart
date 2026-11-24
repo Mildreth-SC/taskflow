@@ -3,17 +3,25 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:taskflow/core/settings_view_model.dart';
 import 'package:taskflow/core/task_failure.dart';
+import 'package:taskflow/core/user_preferences.dart';
 import 'package:taskflow/features/tasks/presentation/task_form_screen.dart';
 import 'package:taskflow/features/tasks/presentation/task_list_screen.dart';
 import 'package:taskflow/features/tasks/presentation/tasks_view_model.dart';
 
 import 'fake_task_repository.dart';
+import 'memory_store.dart';
 
 /// Monta una pantalla con un ViewModel que usa el fake (sin red).
 Widget host(TasksViewModel model, Widget screen) {
-  return ChangeNotifierProvider<TasksViewModel>.value(
-    value: model,
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider(
+        create: (_) => SettingsViewModel(UserPreferences(MemoryStore())),
+      ),
+      ChangeNotifierProvider<TasksViewModel>.value(value: model),
+    ],
     child: MaterialApp(home: screen),
   );
 }
